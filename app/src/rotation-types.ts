@@ -1,9 +1,14 @@
 export enum YawDirection {
-    cw,
-    ccw,
+    left,
+    right,
 }
 
 export enum PitchDirection {
     up,
     down,
+}
+
+export enum RollDirection {
+    ccw,
+    cw,
 }
