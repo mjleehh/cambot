@@ -1,0 +1,124 @@
+menu "cam bot"
+
+# general options
+
+    config CAMBOT_WIFI_SSID
+        string "ssid"
+        help
+            the wifi network to be used by the smartscreen
+
+    config CAMBOT_WIFI_PASSWORD
+        string "wifi password"
+        help
+            the wifi password to be used by the smartscreen
+
+    config CAMBOT_DISPLAY_CLOCK_PIN
+        int "display clock pin"
+        default 15
+        help
+            I2C clock pin for the display controller
+
+    config CAMBOT_DISPLAY_DATA_PIN
+        int "display data pin"
+        default 4
+        help
+            I2C data pin for the display controller
+
+    config CAMBOT_DISPLAY_RESET_PIN
+        int "display reset pin"
+        default 16
+        help
+            reset pin for the display controller
+
+    config CAMBOT_HOSTNAME
+        string "host name"
+        default "cambot"
+        help
+            the mDNS name of this device
+
+    config CAMBOT_STEPPER_MOVE_DELAY
+        int "stepper move delay (ms)"
+        default 1
+        help
+            This value determines the minimum delay for a stepper to step before the next step is triggered.
+
+    config CAMBOT_STEPPER_CLOCK_DELAY
+        int "stepper clock delay (ms)"
+        default 1
+        help
+            This value determines the clock cycle time to trigger stepping.
+
+# stepper controller pins
+
+    config CAMBOT_YAW_DIRECTION_PIN
+        int "yaw direction pin"
+        default 21
+        help
+            direction pin of tb6560 controlling the yaw rotation at the base of the robot
+
+    config CAMBOT_YAW_CLOCK_PIN
+        int "yaw clock pin"
+        default 22
+        help
+            clock pin of tb6560 controlling the yaw rotation at the base of the robot
+
+    config CAMBOT_LOWER_VERT_1_DIRECTION_PIN
+        int "lower vert 1 direction pin"
+        default 19
+        help
+            direction pin of tb6560 controlling the first motor of the vertical joint closest to the base
+
+    config CAMBOT_LOWER_VERT_1_CLOCK_PIN
+        int "lower vert 1 clock pin"
+        default 23
+        help
+            clock pin of tb6560 controlling the first motor of the vertical joint closest to the base
+
+    config CAMBOT_LOWER_VERT_2_DIRECTION_PIN
+        int "lower vert 2 direction pin"
+        default 18
+        help
+            direction pin of tb6560 controlling the second motor of the vertical joint closest to the base
+
+    config CAMBOT_LOWER_VERT_2_CLOCK_PIN
+        int "lower vert 2 clock pin"
+        default 5
+        help
+            clock pin of tb6560 controlling the second motor of the vertical joint closest to the base
+
+    config CAMBOT_UPPER_VERT_DIRECTION_PIN
+        int "upper vert direction pin"
+        default 3
+        help
+            direction pin of tb6560 controlling the motor of the upper vertical joint
+
+    config CAMBOT_UPPER_VERT_CLOCK_PIN
+        int "upper vert clock pin"
+        default 2
+        help
+            clock pin of tb6560 controlling the motor of the upper vertical joint
+
+    config CAMBOT_ROLL_DIRECTION_PIN
+        int "roll direction pin"
+        default 25
+        help
+            direction pin of tb6560 controlling the motor of the roll joint
+
+    config CAMBOT_ROLL_CLOCK_PIN
+        int "roll clock pin"
+        default 26
+        help
+            clock pin of tb6560 controlling the motor of the roll joint
+
+    config CAMBOT_PITCH_DIRECTION_PIN
+        int "pitch direction pin"
+        default 27
+        help
+            direction pin of tb6560 controlling the motor of the pitch joint
+
+    config CAMBOT_PITCH_CLOCK_PIN
+        int "pitch clock pin"
+        default 14
+        help
+            clock pin of tb6560 controlling the motor of the pitch joint
+endmenu
