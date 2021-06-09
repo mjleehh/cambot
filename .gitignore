@@ -1,0 +1,9 @@
+firmware/sdkconfig
+node_modules
+.idea
+build
+cmake-build-*
+*~
+*.bak
+*.old
+
