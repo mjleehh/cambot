@@ -1,0 +1,3 @@
+[submodule "firmware/mfl"]
+	path = firmware/mfl
+	url = git@github.com:mjleehh/esp32-base.git
