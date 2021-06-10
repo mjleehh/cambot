@@ -6,98 +6,75 @@ export type Action =
     | RequestUpperPitchAction
     | RequestRollAction
     | RequestPitchAction
+    | SetNumStepsAction
+    | SetSpeedAction
 
 export const REQUEST_YAW = 'REQUEST_YAW'
 export type RequestYawAction = {
     type: typeof REQUEST_YAW
-    payload: {
-        direction: YawDirection
-        steps: number
-        speed: number
-
-    }
+    payload: YawDirection
 }
-export const requestYaw = (direction: YawDirection, steps: number, speed: number): RequestYawAction => ({
+export const requestYaw = (direction: YawDirection): RequestYawAction => ({
     type: REQUEST_YAW,
-    payload: {
-        direction,
-        steps,
-        speed,
-    }
+    payload: direction,
 })
 
 export const REQUEST_LOWER_PITCH = 'REQUEST_LOWER_PITCH'
 export type RequestLowerPitchAction = {
     type: typeof REQUEST_LOWER_PITCH
-    payload: {
-        direction:PitchDirection
-        steps: number
-        speed: number
-
-    }
+    payload: PitchDirection
 }
-export const requestLowerPitch = (direction: PitchDirection, steps: number, speed: number): RequestLowerPitchAction => ({
+export const requestLowerPitch = (direction: PitchDirection): RequestLowerPitchAction => ({
     type: REQUEST_LOWER_PITCH,
-    payload: {
-        direction,
-        steps,
-        speed,
-    }
+    payload: direction,
 })
 
 export const REQUEST_UPPER_PITCH = 'REQUEST_UPPER_PITCH'
 export type RequestUpperPitchAction = {
     type: typeof REQUEST_UPPER_PITCH
-    payload: {
-        direction:PitchDirection
-        steps: number
-        speed: number
-
-    }
+    payload: PitchDirection
 }
-export const requestUpperPitch = (direction: PitchDirection, steps: number, speed: number): RequestUpperPitchAction => ({
+export const requestUpperPitch = (direction: PitchDirection): RequestUpperPitchAction => ({
     type: REQUEST_UPPER_PITCH,
-    payload: {
-        direction,
-        steps,
-        speed,
-    }
+    payload: direction,
 })
 
 export const REQUEST_ROLL = 'REQUEST_ROLL'
 export type RequestRollAction = {
     type: typeof REQUEST_ROLL
-    payload: {
-        direction:RollDirection
-        steps: number
-        speed: number
-
-    }
+    payload: RollDirection
 }
-export const requestRoll = (direction: RollDirection, steps: number, speed: number): RequestRollAction => ({
+export const requestRoll = (direction: RollDirection): RequestRollAction => ({
     type: REQUEST_ROLL,
-    payload: {
-        direction,
-        steps,
-        speed,
-    }
+    payload: direction,
 })
 
 export const REQUEST_PITCH = 'REQUEST_PITCH'
 export type RequestPitchAction = {
     type: typeof REQUEST_PITCH
-    payload: {
-        direction:PitchDirection
-        steps: number
-        speed: number
-
-    }
+    payload: PitchDirection
 }
-export const requestPitch = (direction: PitchDirection, steps: number, speed: number): RequestPitchAction => ({
+export const requestPitch = (direction: PitchDirection): RequestPitchAction => ({
     type: REQUEST_PITCH,
-    payload: {
-        direction,
-        steps,
-        speed,
-    }
+    payload: direction,
+})
+
+export const SET_NUM_STEPS = 'SET_NUM_STEPS'
+export type SetNumStepsAction = {
+    type: typeof SET_NUM_STEPS
+    payload: number
+}
+export const setNumSteps = (numSteps: number): SetNumStepsAction => ({
+    type: SET_NUM_STEPS,
+    payload: numSteps
+})
+
+export const SET_SPEED = 'SET_SPEED'
+export type SetSpeedAction = {
+    type: typeof SET_SPEED
+    payload: number
+}
+export const setSpeed = (speed: number): SetSpeedAction => ({
+    type: SET_SPEED,
+    payload: speed
 })
