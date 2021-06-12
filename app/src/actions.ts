@@ -1,13 +1,18 @@
-import {PitchDirection, RollDirection, YawDirection} from './rotation-types'
+import {Rotations, PitchDirection, RollDirection, YawDirection} from './types'
 
 export type Action =
     | RequestYawAction
-    | RequestLowerPitchAction
-    | RequestUpperPitchAction
+    | RequestLowerVertAction
+    | RequestUpperVertAction
     | RequestRollAction
     | RequestPitchAction
     | SetNumStepsAction
     | SetSpeedAction
+    | SetHomeAction
+    | GetRotationsAction
+    | GotRotationsAction
+    | IncreaseSpeedAction
+    | DecreaseSpeedAction
 
 export const REQUEST_YAW = 'REQUEST_YAW'
 export type RequestYawAction = {
@@ -19,23 +24,23 @@ export const requestYaw = (direction: YawDirection): RequestYawAction => ({
     payload: direction,
 })
 
-export const REQUEST_LOWER_PITCH = 'REQUEST_LOWER_PITCH'
-export type RequestLowerPitchAction = {
-    type: typeof REQUEST_LOWER_PITCH
+export const REQUEST_LOWER_VERT = 'REQUEST_LOWER_PITCH'
+export type RequestLowerVertAction = {
+    type: typeof REQUEST_LOWER_VERT
     payload: PitchDirection
 }
-export const requestLowerPitch = (direction: PitchDirection): RequestLowerPitchAction => ({
-    type: REQUEST_LOWER_PITCH,
+export const requestLowerVert = (direction: PitchDirection): RequestLowerVertAction => ({
+    type: REQUEST_LOWER_VERT,
     payload: direction,
 })
 
-export const REQUEST_UPPER_PITCH = 'REQUEST_UPPER_PITCH'
-export type RequestUpperPitchAction = {
-    type: typeof REQUEST_UPPER_PITCH
+export const REQUEST_UPPER_VERT = 'REQUEST_UPPER_PITCH'
+export type RequestUpperVertAction = {
+    type: typeof REQUEST_UPPER_VERT
     payload: PitchDirection
 }
-export const requestUpperPitch = (direction: PitchDirection): RequestUpperPitchAction => ({
-    type: REQUEST_UPPER_PITCH,
+export const requestUpperVert = (direction: PitchDirection): RequestUpperVertAction => ({
+    type: REQUEST_UPPER_VERT,
     payload: direction,
 })
 
@@ -77,4 +82,56 @@ export type SetSpeedAction = {
 export const setSpeed = (speed: number): SetSpeedAction => ({
     type: SET_SPEED,
     payload: speed
+})
+
+export const SET_HOME = 'SET_HOME'
+export type SetHomeAction = {
+    type: typeof SET_HOME
+}
+export const setHome = (): SetHomeAction => ({
+    type: SET_HOME
+})
+
+export const GET_ROTATIONS = 'GET_ROTATIONS'
+export type GetRotationsAction = {
+    type: typeof GET_ROTATIONS
+}
+export const getRotations = (): GetRotationsAction => ({
+    type: GET_ROTATIONS
+})
+
+export const GOT_ROTATIONS = 'GOT_ROTATIONS'
+export type GotRotationsAction = {
+    type: typeof GOT_ROTATIONS
+    payload: Rotations
+}
+export const gotRotations = (positions: Rotations): GotRotationsAction => ({
+    type: GOT_ROTATIONS,
+    payload: positions,
+})
+
+export const INCREASE_SPEED = 'INCREASE_SPEED'
+export type IncreaseSpeedAction = {
+    type: typeof INCREASE_SPEED
+}
+export const increaseSpeed = (): IncreaseSpeedAction => ({
+    type: INCREASE_SPEED,
+})
+
+export const DECREASE_SPEED = 'DECREASE_SPEED'
+export type DecreaseSpeedAction = {
+    type: typeof DECREASE_SPEED
+}
+export const decreaseSpeed = (): DecreaseSpeedAction => ({
+    type: DECREASE_SPEED,
+})
+
+export const MOVE_YAW = 'MOVE_YAW'
+export type MoveYawAction = {
+    type: typeof MOVE_YAW
+    payload: number
+}
+export const moveYaw = (angle: number): MoveYawAction => ({
+    type: MOVE_YAW,
+    payload: angle
 })
