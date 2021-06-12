@@ -36,17 +36,11 @@ menu "cam bot"
         help
             the mDNS name of this device
 
-    config CAMBOT_STEPPER_MOVE_DELAY
-        int "stepper move delay (ms)"
-        default 1
+    config CAMBOT_STEPPER_CYCLE_TIME
+        int "stepper cycle time (microseconds)"
+        default 1000
         help
-            This value determines the minimum delay for a stepper to step before the next step is triggered.
-
-    config CAMBOT_STEPPER_CLOCK_DELAY
-        int "stepper clock delay (ms)"
-        default 1
-        help
-            This value determines the clock cycle time to trigger stepping.
+            This value determines the length of one stepper control cycle.
 
 # stepper controller pins
 
@@ -121,4 +115,54 @@ menu "cam bot"
         default 14
         help
             clock pin of tb6560 controlling the motor of the pitch joint
+
+# actuator calibration
+
+    config CAMBOT_YAW_NUM_STEPS
+        int "num yaw steps"
+        default 32276
+        help
+            the number of steps it takes for a full rotation of the yaw actuator
+
+    config CAMBOT_LOWER_VERT_NUM_STEPS
+        int "num lower vert steps"
+        default 17228
+        help
+            the number of steps it takes for a full rotation of the lower vert actuator
+
+    config CAMBOT_UPPER_VERT_NUM_STEPS
+        int "num upper vert steps"
+        default 72344
+        help
+            the number of steps it takes for a full rotation of the upper vert actuator
+
+    config CAMBOT_ROLL_NUM_STEPS
+        int "num roll steps"
+        default 3204
+        help
+            the number of steps it takes for a full rotation of the roll actuator
+
+    config CAMBOT_PITCH_NUM_STEPS
+        int "num pitch steps"
+        default 14588
+        help
+            the number of steps it takes for a full rotation of the pitch actuator
+
+    config CAMBOT_LENGTH_BASE_TO_LOWER_VERT
+        int "length base to lower vert (mm)"
+        default 235
+        help
+            the distance of the base plate to the axis of the lower vert joint in millimeters
+
+    config CAMBOT_LENGTH_LOWER_VERT_TO_UPPER_VERT
+        int "length lower vert to upper vert (mm)"
+        default 222
+        help
+            the distance of the base plate to the axis of the lower vert joint in millimeters
+
+    config CAMBOT_LENGTH_UPPER_VERT_TO_PITCH
+        int "length lower vert to upper vert (mm)"
+        default 222
+        help
+            the distance of the base plate to the axis of the lower vert joint in millimeters
 endmenu
