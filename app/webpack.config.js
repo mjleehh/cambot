@@ -5,6 +5,7 @@ const path = require('path')
 
 const OUTPUT_FOLDER = path.join(__dirname, 'dist')
 const INDEX_HTML = path.join(__dirname, '/index.html')
+const ROBOT = process.env.ROBOT || 'http://192.168.178.38'
 
 module.exports = {
     entry: './src/index.tsx',
@@ -40,7 +41,7 @@ module.exports = {
     devServer: {
         proxy: {
             '/api': {
-                target: 'http://192.168.178.38',
+                target: ROBOT,
                 pathRewrite: {'^/api': ''},
             },
         },
