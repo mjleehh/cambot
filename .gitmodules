@@ -1,3 +1,9 @@
 [submodule "firmware/mfl"]
 	path = firmware/mfl
 	url = git@github.com:mjleehh/esp32-base.git
+[submodule "firmware/lib/lohmann_json/src"]
+	path = firmware/lib/lohmann_json/src
+	url = https://github.com/nlohmann/json.git
+[submodule "firmware/lib/linalg/src"]
+	path = firmware/lib/linalg/src
+	url = https://github.com/sgorsten/linalg
