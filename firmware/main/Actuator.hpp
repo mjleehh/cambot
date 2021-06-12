@@ -10,7 +10,7 @@ namespace cambot {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-struct Steppers;
+struct Actuators;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -22,6 +22,12 @@ namespace cambot::stepper {
 
 struct InvalidSpeed : std::invalid_argument {
     explicit InvalidSpeed() : invalid_argument("speed too high for stepper") {};
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+struct ErrorCalibrating : std::invalid_argument {
+    explicit ErrorCalibrating() : invalid_argument("failed to calibrate stepper") {};
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -39,8 +45,9 @@ struct StepperTd6560 {
  *
  * This class can only be used in combination with the Steppers class.
  * The public interface of this class is thread safe.
+ *
  */
-struct StepperGroupTd6560 {
+struct Actuator {
     enum class Direction : int {
         cw = -1,
         ccw = 1,
@@ -88,9 +95,21 @@ struct StepperGroupTd6560 {
      */
     void rotateRad(float rad, float radSpeed);
 
+    void stop();
+
+    /**
+     * set the steppers current position to be initial position
+     */
+    void setHome();
+
+    /**
+     * determine whether the steppers have been calibrated yet
+     */
+    bool isHomed() const;
+
     uint numSteps() const;
 
-    uint8_t positionSteps() const;
+    int positionSteps() const;
 
     float positionAngle() const;
 
@@ -112,14 +131,14 @@ struct StepperGroupTd6560 {
      */
     float radToSteps(float rad) const;
 
-    StepperGroupTd6560(StepperGroupTd6560&& other) = delete;
-    StepperGroupTd6560(const StepperGroupTd6560&) = delete;
-    StepperGroupTd6560& operator=(const StepperGroupTd6560&) = delete;
+    Actuator(Actuator&& other) = delete;
+    Actuator(const Actuator&) = delete;
+    Actuator& operator=(const Actuator&) = delete;
 
 private:
-    friend Steppers;
+    friend Actuators;
 
-    StepperGroupTd6560(uint numSteps, std::vector<StepperTd6560>&& steppers, SemaphoreHandle_t dataLock);
+    Actuator(uint numSteps, std::vector<StepperTd6560>&& steppers, SemaphoreHandle_t dataLock);
 
     /**
      * start a step
@@ -139,7 +158,8 @@ private:
 
     const uint numSteps_;
     std::vector<StepperTd6560> steppers_;
-    uint stepPos_;
+    int stepPos_;
+    bool isHomed_;
 
     int delta_;
     uint cyclesPerStep_;

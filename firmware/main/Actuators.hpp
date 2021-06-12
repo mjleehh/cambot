@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StepperGroupTd6560.hpp"
+#include "Actuator.hpp"
 #include <vector>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
@@ -27,38 +27,52 @@ namespace cambot {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-struct Steppers {
-    Steppers();
-    ~Steppers();
+struct Actuators {
+    Actuators();
+    ~Actuators();
 
     /**
      * add an actuator moved by a single stepper
      */
-    stepper::StepperGroupTd6560& add(uint numSteps, gpio_num_t directionPin, gpio_num_t clockPin);
+    stepper::Actuator& add(uint numSteps, gpio_num_t directionPin, gpio_num_t clockPin);
 
     /**
      * add an actuator that is powered by a group of steppers
      */
-    stepper::StepperGroupTd6560& addGroup(uint numSteps, std::vector<stepper::StepperTd6560>&& steppers);
+    stepper::Actuator& addGroup(uint numSteps, std::vector<stepper::StepperTd6560>&& steppers);
 
 
     void run();
+    void shutdown();
+
+    /**
+     * stop all steppers
+     */
     void stop();
 
+    /**
+     * make all the steppers current position the 0 position
+     */
+    void setHome();
+
 private:
-    enum State {
+    enum class State {
         idle,
-        startRequested,
         active,
         stopRequested,
     } state_;
 
-    void runUpdateLoop();
-    [[noreturn]] static void updateTaskWrapper(void* param);
+    enum class CyclePhase {
+        up,
+        down,
+    } currentCyclePhase_;
+
+    void timerCallback();
+    static void timerCallbackWrapper(void* param);
 
     SemaphoreHandle_t dataLock_;
-    std::vector<stepper::StepperGroupTd6560*> steppers_;
-    TaskHandle_t updateTask_;
+    std::vector<stepper::Actuator*> actuators_;
+    esp_timer_handle_t timer_;
 };
 
 // ---------------------------------------------------------------------------------------------------------------------

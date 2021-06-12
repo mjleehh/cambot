@@ -2,8 +2,8 @@
 #include <esp_log.h>
 #include <cmath>
 #include <mfl/thread/LockGuard.hpp>
-#include "StepperGroupTd6560.hpp"
-#include "stepper-common.hpp"
+#include "Actuator.hpp"
+
 
 using mfl::thread::LockGuard;
 
@@ -19,15 +19,19 @@ constexpr int sign(int value) {
     return (0 < value) - (value < 0);
 }
 
+constexpr uint abs(int value) {
+    return value * (value > 0) - value * (value < 0);
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 } // namespace anonymous
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-StepperGroupTd6560::StepperGroupTd6560(uint numSteps, std::vector<StepperTd6560>&& steppers, SemaphoreHandle_t dataLock)
+Actuator::Actuator(uint numSteps, std::vector<StepperTd6560>&& steppers, SemaphoreHandle_t dataLock)
         : numSteps_(numSteps), steppers_(std::move(steppers)),
-          stepPos_(0), delta_(0), cyclesPerStep_(0), cyclesSinceLastStep_(0), dataLock_(dataLock)
+          stepPos_(0), isHomed_(false), delta_(0), cyclesPerStep_(0), cyclesSinceLastStep_(0), dataLock_(dataLock)
 {
     uint64_t mask = 0;
     for (auto& stepper : steppers_) {
@@ -51,51 +55,51 @@ StepperGroupTd6560::StepperGroupTd6560(uint numSteps, std::vector<StepperTd6560>
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::moveToStep(int step, uint speed) {
+void Actuator::moveToStep(int step, uint speed) {
     auto numSteps = static_cast<int>(numSteps_);
-    auto stepPos  = static_cast<int>(stepPos_);
-    int delta = (step - stepPos) % numSteps;
+    int delta = (step - stepPos_) % numSteps;
     auto direction = delta >= 0 ? Direction::ccw : Direction::cw;
-    rotateSteps(direction, delta, speed);
+    ESP_LOGI(tag, "move to %d, %d, %d, %d", step, speed, stepPos_, delta);
+    rotateSteps(direction, abs(delta), speed);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::moveToAngle(float angle, float angularSpeed) {
+void Actuator::moveToAngle(float angle, float angularSpeed) {
     moveToStep(angleToSteps(angle), angleToSteps(angularSpeed));
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::moveToRad(float rad, float radSpeed) {
+void Actuator::moveToRad(float rad, float radSpeed) {
     moveToStep(radToSteps(rad), radToSteps(radSpeed));
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::rotateSteps(StepperGroupTd6560::Direction direction, uint steps, uint speed) {
-    if (speed < millisPerCycle()) {
+void Actuator::rotateSteps(Actuator::Direction direction, uint steps, uint speed) {
+    uint cyclesPerMillisecond = 1000000u / CONFIG_CAMBOT_STEPPER_CYCLE_TIME;
+
+    if (speed > cyclesPerMillisecond) {
         throw stepper::InvalidSpeed();
     }
 
-    ESP_LOGI(tag, "requesting move");
     LockGuard dataLock(dataLock_);
-
     for (auto& stepper : steppers_) {
         auto pinLevel = (direction == Direction::cw && !stepper.inverted) || (direction == Direction::ccw && stepper.inverted);
-        ESP_LOGI(tag, "setting directin level to %d, %d", pinLevel, static_cast<uint32_t>(pinLevel));
         gpio_set_level(stepper.directionPin, pinLevel);
     }
 
     delta_ = static_cast<int>(direction) * steps;
-    cyclesPerStep_ = 1000u / speed / millisPerCycle();
+    cyclesPerStep_ = cyclesPerMillisecond / speed;
     cyclesSinceLastStep_ = cyclesPerStep_;
-    ESP_LOGI(tag, "delta %d, %d, %d", delta_, cyclesPerStep_, cyclesSinceLastStep_);
+
+    ESP_LOGI(tag, "rotate steps: \ncycles per ms:  %d\nspeed:          %d\ndelta:          %d\ncycles per step:%d", cyclesPerMillisecond, speed, delta_, cyclesPerStep_);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::rotateAngle(float angle, float angularSpeed) {
+void Actuator::rotateAngle(float angle, float angularSpeed) {
     auto direction = angle >= 0 ? Direction::ccw : Direction::cw;
     auto steps = std::abs(angleToSteps(angle));
     auto stepSpeed = angleToSteps(angularSpeed);
@@ -104,7 +108,7 @@ void StepperGroupTd6560::rotateAngle(float angle, float angularSpeed) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::rotateRad(float rad, float radSpeed) {
+void Actuator::rotateRad(float rad, float radSpeed) {
     auto direction = rad >= 0 ? Direction::ccw : Direction::cw;
     auto steps = std::abs(radToSteps(rad));
     auto stepSpeed = radToSteps(radSpeed);
@@ -113,84 +117,107 @@ void StepperGroupTd6560::rotateRad(float rad, float radSpeed) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-uint StepperGroupTd6560::numSteps() const {
+void Actuator::stop() {
+    LockGuard dataLock(dataLock_);
+    delta_ = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+void Actuator::setHome() {
+    LockGuard dataLock(dataLock_);
+    if (isMoving()) {
+        throw ErrorCalibrating();
+    }
+    stepPos_ = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+bool Actuator::isHomed() const {
+    return isHomed_;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+uint Actuator::numSteps() const {
     return numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-uint8_t StepperGroupTd6560::positionSteps() const {
+int Actuator::positionSteps() const {
     return stepPos_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-float StepperGroupTd6560::positionAngle() const {
+float Actuator::positionAngle() const {
     return stepsToAngle(stepPos_);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-float StepperGroupTd6560::positionRad() const {
+float Actuator::positionRad() const {
     return stepsToRad(stepPos_);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-bool StepperGroupTd6560::isMoving() const {
+bool Actuator::isMoving() const {
     return delta_ != 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-float StepperGroupTd6560::stepsToAngle(float steps) const {
+float Actuator::stepsToAngle(float steps) const {
     return steps / numSteps_ * 360;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-float StepperGroupTd6560::angleToSteps(float angle) const {
+float Actuator::angleToSteps(float angle) const {
     return angle / 360 * numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-float StepperGroupTd6560::stepsToRad(float steps) const {
+float Actuator::stepsToRad(float steps) const {
     return steps / numSteps_ * 2 * M_PI;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-float StepperGroupTd6560::radToSteps(float rad) const {
+float Actuator::radToSteps(float rad) const {
     return rad / (2 * M_PI) * numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void StepperGroupTd6560::clockUp() {
+void Actuator::clockUp() {
     if (needToStep()) {
-        stepPos_ = (numSteps_ + stepPos_ + delta_) % numSteps_; // rotation step values should be positive
         for (auto& stepper : steppers_) {
             gpio_set_level(stepper.clockPin, 1);
         }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+void Actuator::clockDown() {
+    if (needToStep()) {
+        for (auto& stepper : steppers_) {
+            gpio_set_level(stepper.clockPin, 0);
+        }
         delta_ -= sign(delta_);
+        stepPos_ += sign(delta_);
         cyclesSinceLastStep_ = 0;
     } else if (isMoving()) {
         ++cyclesSinceLastStep_;
     }
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
-
-void StepperGroupTd6560::clockDown() {
-    if (needToStep()) {
-        for (auto& stepper : steppers_) {
-            gpio_set_level(stepper.clockPin, 0);
-        }
-    }
-}
-
-bool StepperGroupTd6560::needToStep() const {
+bool Actuator::needToStep() const {
     return isMoving() && cyclesSinceLastStep_ >= cyclesPerStep_;
 }
 
