@@ -1,13 +1,20 @@
 idf_component_register(SRCS
         cambot_main.cpp
-        stepper-common.hpp
-        Steppers.hpp
-        Steppers.cpp
-        StepperGroupTd6560.hpp
-        StepperGroupTd6560.cpp
+        App.hpp
+        App.cpp
+        Actuators.hpp
+        Actuators.cpp
+        Actuator.hpp
+        Actuator.cpp
+        Kinematics.h
+        Kinematics.cpp
+        vecs.hpp
+        additional_response_types.hpp
         INCLUDE_DIRS "")
 
 set(COMPONENT_REQUIRES
         mfl_display
         mfl_helpers
-        mfl_thread)
+        mfl_thread
+        lohmann_json
+        linalg)
