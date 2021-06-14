@@ -83,7 +83,7 @@ void App::initializeSteppers() {
                     true,
             }});
     auto &upperVert = steppers_.add(CONFIG_CAMBOT_UPPER_VERT_NUM_STEPS, pinFromInt<CONFIG_CAMBOT_UPPER_VERT_DIRECTION_PIN>(),
-                                    pinFromInt<CONFIG_CAMBOT_UPPER_VERT_CLOCK_PIN>());
+                                    pinFromInt<CONFIG_CAMBOT_UPPER_VERT_CLOCK_PIN>(), true);
     auto &roll = steppers_.add(CONFIG_CAMBOT_ROLL_NUM_STEPS, pinFromInt<CONFIG_CAMBOT_ROLL_DIRECTION_PIN>(),
                                pinFromInt<CONFIG_CAMBOT_ROLL_CLOCK_PIN>());
     auto &pitch = steppers_.add(CONFIG_CAMBOT_PITCH_NUM_STEPS, pinFromInt<CONFIG_CAMBOT_PITCH_DIRECTION_PIN>(),
@@ -209,31 +209,6 @@ void App::initializeCalibrationPhase() {
         }
     };
 
-    auto rotations = [this](mfl::httpd::Context<void, nlohmann::json>& c) {
-        c.res.body = {
-              {"yaw", {
-                      {"deg", actuators_->yaw.positionAngle()},
-                      {"steps", actuators_->yaw.positionSteps()}
-              }},
-              {"lowerVert", {
-                      {"deg", actuators_->lowerVert.positionAngle()},
-                      {"steps", actuators_->lowerVert.positionSteps()}
-              }},
-              {"upperVert", {
-                      {"deg", actuators_->upperVert.positionAngle()},
-                      {"steps", actuators_->upperVert.positionSteps()}
-              }},
-              {"roll", {
-                      {"deg", actuators_->roll.positionAngle()},
-                      {"steps", actuators_->roll.positionSteps()}
-              }},
-              {"pitch", {
-                      {"deg", actuators_->pitch.positionAngle()},
-                      {"steps", actuators_->pitch.positionSteps()}
-              }},
-        };
-    };
-
     router_.post("/calibrate/yaw/left/:steps/:speed", stepYawLeft);
     router_.post("/calibrate/yaw/right/:steps/:speed", stepYawRight);
 
@@ -251,7 +226,58 @@ void App::initializeCalibrationPhase() {
 
     router_.post("/calibrate/set-home", setHome);
 
-    router_.get("/rotations", rotations);
+    router_.post("/home", [this](mfl::httpd::Context<void, void>& c) {
+        actuators_->yaw.moveToStep(0, 100);
+        actuators_->lowerVert.moveToStep(0, 100);
+        actuators_->upperVert.moveToStep(0, 100);
+    });
+
+    kinematics_ = std::make_unique<Kinematics>(actuators_->yaw, actuators_->lowerVert, actuators_->upperVert, actuators_->roll, actuators_->pitch);
+    router_.get("/state", [this](mfl::httpd::Context<void, nlohmann::json>& c) {
+        auto position = kinematics_->position();
+        c.res.body = {
+            {"rotations", {
+                {"yaw", {
+                  {"deg", actuators_->yaw.positionAngle()},
+                  {"steps", actuators_->yaw.positionSteps()}
+                }},
+                {"lowerVert", {
+                        {"deg", actuators_->lowerVert.positionAngle()},
+                        {"steps", actuators_->lowerVert.positionSteps()}
+                }},
+                {"upperVert", {
+                        {"deg", actuators_->upperVert.positionAngle()},
+                        {"steps", actuators_->upperVert.positionSteps()}
+                }},
+                {"roll", {
+                   {"deg", actuators_->roll.positionAngle()},
+                   {"steps", actuators_->roll.positionSteps()}
+                }},
+                {"pitch", {
+                    {"deg", actuators_->pitch.positionAngle()},
+                    {"steps", actuators_->pitch.positionSteps()}
+                }},
+
+            }},
+            {"position", {
+                {"x", position.x},
+                {"y", position.y},
+                {"z", position.z}
+            }}
+        };
+    });
+
+    router_.get("/invk", [this](mfl::httpd::Context<void, nlohmann::json>& c) {
+        auto position = kinematics_->position();
+        auto yaw = kinematics_->yawForPosition(position) * 180 / M_PI;
+        auto lowerVert = kinematics_->lowerVertForPosition(position) * 180 / M_PI;
+        auto upperVert = kinematics_->upperVertForPosition(position) * 180 / M_PI;
+        c.res.body = {
+                {"yaw", yaw},
+                {"lowerVert", lowerVert},
+                {"upperVert", upperVert}
+        };
+    });
 
     server_.start();
     steppers_.run();
@@ -261,12 +287,6 @@ void App::initializeCalibrationPhase() {
 }
 
 void App::setReady() {
-    kinematics_ = std::make_unique<Kinematics>(actuators_->yaw, actuators_->lowerVert, actuators_->upperVert, actuators_->roll, actuators_->pitch);
-    auto position = [this](mfl::httpd::Context<void, vecs::int3>& c){
-        c.res.body = kinematics_->position();
-    };
-    router_.get("/position", position);
-
     auto moveYaw = [this](mfl::httpd::Context<void, std::string>& c) {
         ESP_LOGI(tag, "move yaw");
         auto angle = c.params.get<int>("angle");
@@ -274,6 +294,20 @@ void App::setReady() {
         actuators_->yaw.moveToAngle(angle, speed);
     };
     router_.post("/move/yaw/:angle/:speed", moveYaw);
+
+    router_.post("/move/position/:x/:y/:z/:speed", [this](mfl::httpd::Context<void, void>& c){
+        vecs::int3 position = {
+            c.params.get<int>("x"),
+            c.params.get<int>("y"),
+            c.params.get<int>("z")
+        };
+        auto yaw = kinematics_->yawForPosition(position) * 180 / M_PI;
+        auto lowerVert = kinematics_->lowerVertForPosition(position) * 180 / M_PI;
+        auto upperVert = kinematics_->upperVertForPosition(position) * 180 / M_PI;
+        ESP_LOGI(tag, "move to... %f, %f, %f", yaw, lowerVert, upperVert);
+        ESP_LOGI(tag, "move to... %d, %d, %d", position.x, position.y, position.z);
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
 //
 //    router_.post("/move/lv/:steps/:speed", stepLowerVertUp);
 //

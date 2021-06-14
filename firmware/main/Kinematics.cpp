@@ -1,10 +1,5 @@
-#pragma once
-
 #include "Kinematics.h"
-#include <cmath>
 #include <esp_log.h>
-
-namespace vecs = linalg::aliases;
 
 namespace cambot {
 
@@ -32,6 +27,14 @@ vecs::float3x3 rot3_z(float rad) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+/**
+ * numerically stabilize against full joint stretches where the fraction used in acos approaches 1
+ */
+float stableAcos(float nom, float denom) {
+    float frac =  nom / denom;
+    return acosf(frac * (frac < 1) + (frac > 1));
+}
+
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -43,32 +46,28 @@ Kinematics::Kinematics(stepper::Actuator &yaw, stepper::Actuator &lowerVert, ste
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void Kinematics::moveTo(const vecs::int3& position) {
-
+void Kinematics::moveTo(const vecs::int3& position, float speed) {
+    yaw_.moveToRad(yawForPosition(position), speed);
+    lowerVert_.moveToRad(lowerVertForPosition(position), speed);
+    upperVert_.moveToRad(upperVertForPosition(position), speed);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 vecs::int3 Kinematics::position() const {
     vecs::float2 t_2 = {0, a1_};
-    vecs::float2x2 rotPhi1 = rot2(-upperVert_.positionRad());
+    vecs::float2x2 rotPhi1 = rot2(upperVert_.positionRad());
     auto t_1 = linalg::mul(rotPhi1, t_2) + vecs::float2{0, a0_};
     vecs::float2x2 rotPhi0 = rot2(lowerVert_.positionRad());
     auto t_0 = linalg::mul(rotPhi0, t_1) + vecs::float2{0, b_};
     auto r = linalg::mul(rot3_z(yaw_.positionRad()), vecs::float3{t_0.x, 0, t_0.y});
-
-    ESP_LOGI(tag, "phi_1 %f", upperVert_.positionRad());
-    ESP_LOGI(tag, "phi_0 %f", lowerVert_.positionRad());
-    ESP_LOGI(tag, "t_2 {%f, %f}", t_2.x, t_2.y);
-    ESP_LOGI(tag, "t_1 {%f, %f}", t_1.x, t_1.y);
-    ESP_LOGI(tag, "t_0 {%f, %f}", t_0.x, t_0.y);
     return {r.x, r.y, r.z};
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 float Kinematics::yawForPosition(const vecs::int3& position) const {
-    return std::atan2(position.x, position.y);
+    return atan2f(position.y, position.x);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -76,25 +75,30 @@ float Kinematics::yawForPosition(const vecs::int3& position) const {
 float Kinematics::lowerVertForPosition(const vecs::int3& position) const {
     auto vec_d = calculateProjected_d(position);
     auto d = length(vec_d);
-    auto nom = a0_ * a0_ - a1_ * a1_ + d * d;
-    auto denom = 2 * a0_ * d;
-    auto gamma = atan2(vec_d.x, vec_d.y);
-    return std::acos(nom / denom) - gamma;
+    float nom = a0_ * a0_ - a1_ * a1_ + d * d;
+    float denom = 2 * a0_ * d;
+    float gamma = atan2f(vec_d.x, vec_d.y);
+    ESP_LOGI(tag, "lv %d, %d, %d, %f", a0_, a1_, d, gamma);
+    ESP_LOGI(tag, "%f, %f, %f", nom, denom, stableAcos(nom, denom));
+    return stableAcos(nom, denom) - gamma;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 float Kinematics::upperVertForPosition(const vecs::int3& position) const {
-    return 0;
+    auto d = length(calculateProjected_d(position));
+    float nom = a0_ * a0_ + a1_ * a1_ - d * d;
+    float denom = 2 * a0_ * a1_;
+    ESP_LOGI(tag, "uv %d, %d, %d", a0_, a1_, d);
+    ESP_LOGI(tag, "%f, %f, %f", nom, denom, stableAcos(nom, denom));
+    return stableAcos(nom, denom) - M_PI;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 vecs::int2 Kinematics::calculateProjected_d(const vecs::int3& position) const {
-    auto norm_xy = std::sqrt(position.x * position.x + position.y * position.y);
-    vecs::int2 projected_r{norm_xy, position.z};
-    return projected_r - vecs::int2{0, b_};
-
+    auto norm_xy = sqrtf(position.x * position.x + position.y * position.y);
+    return {norm_xy, position.z - b_};
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

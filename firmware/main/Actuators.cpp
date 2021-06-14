@@ -37,8 +37,8 @@ Actuators::~Actuators() {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-stepper::Actuator& Actuators::add(uint numSteps, gpio_num_t directionPin, gpio_num_t clockPin) {
-    actuators_.push_back(new stepper::Actuator(numSteps, {{directionPin, clockPin, false}}, dataLock_));
+stepper::Actuator& Actuators::add(uint numSteps, gpio_num_t directionPin, gpio_num_t clockPin, bool inverted) {
+    actuators_.push_back(new stepper::Actuator(numSteps, {{directionPin, clockPin, inverted}}, dataLock_));
     return *actuators_.back();
 }
 

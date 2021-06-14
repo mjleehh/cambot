@@ -34,7 +34,7 @@ struct Actuators {
     /**
      * add an actuator moved by a single stepper
      */
-    stepper::Actuator& add(uint numSteps, gpio_num_t directionPin, gpio_num_t clockPin);
+    stepper::Actuator& add(uint numSteps, gpio_num_t directionPin, gpio_num_t clockPin, bool inverted = false);
 
     /**
      * add an actuator that is powered by a group of steppers
