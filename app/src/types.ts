@@ -18,10 +18,21 @@ export type Rotation = {
     steps: number
 }
 
+export type Position = {
+    x: number
+    y: number
+    z: number
+}
+
 export type Rotations = {
     yaw: Rotation,
     lowerVert: Rotation,
     upperVert: Rotation,
     roll: Rotation,
     pitch: Rotation,
+}
+
+export type ArmState = {
+    rotations: Rotations
+    position: Position
 }

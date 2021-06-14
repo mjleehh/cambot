@@ -1,4 +1,4 @@
-import {PitchDirection, RollDirection, YawDirection} from './types'
+import {ArmState, PitchDirection, RollDirection, YawDirection} from './types'
 import axios from 'axios'
 
 class Api {
@@ -52,16 +52,25 @@ class Api {
         }
     }
 
-    setHome() {
+    goHome(): Promise<void> {
+        return axios.post('/api/home')
+    }
+
+    setHome(): Promise<void> {
         return axios.post('/api/calibrate/set-home')
     }
 
-    rotations() {
-        return axios.get('/api/rotations')
+    async armState(): Promise<ArmState> {
+        const {data} = await axios.get('/api/state')
+        return data
     }
 
     moveYaw(angle: number, speed: number) {
         return axios.post(`/api/move/yaw/${angle}/${speed}`)
+    }
+
+    moveTo(x: number, y: number, z: number, speed: number): Promise<void> {
+        return axios.post(`/api/move/position/${x}/${y}/${z}/${speed}`)
     }
 }
 const api = new Api()

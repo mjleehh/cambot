@@ -20,7 +20,7 @@ function convertFullRotationsToTable(rotations: Rotations) {
 }
 
 const RotationTable: React.FunctionComponent = () => {
-    const rotations = useSelector<State, Rotations>(({rotations}) => rotations)
+    const rotations = useSelector<State, Rotations>(({armState: {rotations}}) => rotations)
 
     const tableData = convertFullRotationsToTable(rotations)
     return <Table pagination={false} dataSource={tableData} columns={columns}/>

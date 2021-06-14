@@ -1,4 +1,4 @@
-import {Rotations, PitchDirection, RollDirection, YawDirection} from './types'
+import {PitchDirection, RollDirection, YawDirection, ArmState} from './types'
 
 export type Action =
     | RequestYawAction
@@ -9,10 +9,11 @@ export type Action =
     | SetNumStepsAction
     | SetSpeedAction
     | SetHomeAction
-    | GetRotationsAction
-    | GotRotationsAction
+    | GotArmState
     | IncreaseSpeedAction
     | DecreaseSpeedAction
+    | GoHomeAction
+    | MoveToAction
 
 export const REQUEST_YAW = 'REQUEST_YAW'
 export type RequestYawAction = {
@@ -84,6 +85,14 @@ export const setSpeed = (speed: number): SetSpeedAction => ({
     payload: speed
 })
 
+export const GO_HOME = 'GO_HOME'
+export type GoHomeAction = {
+    type: typeof GO_HOME
+}
+export const goHome = (): GoHomeAction => ({
+    type: GO_HOME
+})
+
 export const SET_HOME = 'SET_HOME'
 export type SetHomeAction = {
     type: typeof SET_HOME
@@ -92,22 +101,14 @@ export const setHome = (): SetHomeAction => ({
     type: SET_HOME
 })
 
-export const GET_ROTATIONS = 'GET_ROTATIONS'
-export type GetRotationsAction = {
-    type: typeof GET_ROTATIONS
+export const GOT_ARM_STATE = 'GOT_ARM_STATE'
+export type GotArmState = {
+    type: typeof GOT_ARM_STATE
+    payload: ArmState
 }
-export const getRotations = (): GetRotationsAction => ({
-    type: GET_ROTATIONS
-})
-
-export const GOT_ROTATIONS = 'GOT_ROTATIONS'
-export type GotRotationsAction = {
-    type: typeof GOT_ROTATIONS
-    payload: Rotations
-}
-export const gotRotations = (positions: Rotations): GotRotationsAction => ({
-    type: GOT_ROTATIONS,
-    payload: positions,
+export const gotArmState = (armState: ArmState): GotArmState => ({
+    type: GOT_ARM_STATE,
+    payload: armState,
 })
 
 export const INCREASE_SPEED = 'INCREASE_SPEED'
@@ -134,4 +135,19 @@ export type MoveYawAction = {
 export const moveYaw = (angle: number): MoveYawAction => ({
     type: MOVE_YAW,
     payload: angle
+})
+
+export const MOVE_TO = 'MOVE_TO'
+export type MoveToAction = {
+    type: typeof MOVE_TO
+    payload: {
+        x: number
+        y: number
+        z: number
+        speed: number
+    }
+}
+export const moveTo = (x: number, y: number, z: number, speed: number): MoveToAction => ({
+    type: MOVE_TO,
+    payload: {x, y, z, speed}
 })

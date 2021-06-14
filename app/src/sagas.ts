@@ -9,10 +9,9 @@ import {
     RequestRollAction,
     RequestPitchAction,
     SetHomeAction,
-    GET_ROTATIONS,
-    gotRotations,
+    gotArmState,
     SET_HOME,
-    MOVE_YAW
+    MOVE_YAW, GO_HOME, MoveToAction, MOVE_TO
 } from './actions'
 import {takeEvery, call, select, fork, delay, put} from 'redux-saga/effects'
 import api from './api'
@@ -42,30 +41,33 @@ function* pitchSaga({payload: direction}: RequestPitchAction) {
     yield call([api, api.pitch], direction, numSteps, speed)
 }
 
-function* setHomeSaga(_: SetHomeAction) {
+function* setHomeSaga() {
     yield call([api, api.setHome])
 }
 
-function* getRotationsSaga(_: SetHomeAction): any {
-    const rotations = yield call([api, api.rotations])
-    console.log(rotations.data)
+function* goHomeSaga() {
+    yield call([api, api.goHome])
 }
 
-function* pollPositionsSaga(): any{
+function* pollArmStateSaga(): any{
     while (true) {
         try {
-            const {data} = yield call([api, api.rotations])
-            console.log(data)
-            yield put(gotRotations(data))
-            yield delay(1000)
+            const armState = yield call([api, api.armState])
+            console.log(armState)
+            yield put(gotArmState(armState))
         } catch (e) {
             console.log('polling positions failed')
         }
+        yield delay(1000)
     }
 }
 
 function* moveYawSaga({payload: angle}: RequestRollAction) {
     yield call([api, api.moveYaw], angle, 1)
+}
+
+function* moveToSaga({payload: {x, y, z, speed}}: MoveToAction) {
+    yield call([api, api.moveTo], x, y, z, speed)
 }
 
 export default function* rootSaga() {
@@ -75,7 +77,8 @@ export default function* rootSaga() {
     yield takeEvery(REQUEST_ROLL, rollSaga)
     yield takeEvery(REQUEST_PITCH, pitchSaga)
     yield takeEvery(SET_HOME, setHomeSaga)
-    yield takeEvery(GET_ROTATIONS, getRotationsSaga)
-    yield fork(pollPositionsSaga)
+    yield takeEvery(GO_HOME, goHomeSaga)
+    yield fork(pollArmStateSaga)
     yield takeEvery(MOVE_YAW, moveYawSaga)
+    yield takeEvery(MOVE_TO, moveToSaga)
 }

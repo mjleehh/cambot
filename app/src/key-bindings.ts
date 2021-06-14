@@ -1,6 +1,6 @@
 import Mousetrap from 'mousetrap'
 import {
-    decreaseSpeed,
+    decreaseSpeed, goHome,
     increaseSpeed,
     requestLowerVert,
     requestPitch,
@@ -31,6 +31,7 @@ export const STEPS_1000_KEY = '4'
 export const INCREASE_SPEED_KEY = '+'
 export const DECREASE_SPEED_KEY = '-'
 
+export const GO_HOME_KEY = 'h'
 export const SET_HOME_KEY = '0'
 
 export default function bindKeys(dispatch: Dispatch): void {
@@ -81,6 +82,9 @@ export default function bindKeys(dispatch: Dispatch): void {
 
     Mousetrap.bind(DECREASE_SPEED_KEY, () =>
         dispatch(decreaseSpeed()))
+
+    Mousetrap.bind(GO_HOME_KEY, () =>
+        dispatch(goHome()))
 
     Mousetrap.bind(SET_HOME_KEY, () =>
         dispatch(setHome()))
