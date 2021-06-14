@@ -31,7 +31,7 @@ constexpr uint abs(int value) {
 
 Actuator::Actuator(uint numSteps, std::vector<StepperTd6560>&& steppers, SemaphoreHandle_t dataLock)
         : numSteps_(numSteps), steppers_(std::move(steppers)),
-          stepPos_(0), isHomed_(false), delta_(0), cyclesPerStep_(0), cyclesSinceLastStep_(0), dataLock_(dataLock)
+          stepPos_(0), isHomed_(false), delta_(0), cyclesPerStep_(0), cyclesSinceLastStep_(0), idle_(true), dataLock_(dataLock)
 {
     uint64_t mask = 0;
     for (auto& stepper : steppers_) {
@@ -165,7 +165,7 @@ float Actuator::positionRad() const {
 // ---------------------------------------------------------------------------------------------------------------------
 
 bool Actuator::isMoving() const {
-    return delta_ != 0;
+    return !idle_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -195,6 +195,8 @@ float Actuator::radToSteps(float rad) const {
 // ---------------------------------------------------------------------------------------------------------------------
 
 void Actuator::clockUp() {
+    // only clock up can start and end moving
+    idle_ = delta_ == 0;
     if (needToStep()) {
         for (auto& stepper : steppers_) {
             gpio_set_level(stepper.clockPin, 1);
@@ -209,8 +211,8 @@ void Actuator::clockDown() {
         for (auto& stepper : steppers_) {
             gpio_set_level(stepper.clockPin, 0);
         }
-        delta_ -= sign(delta_);
         stepPos_ += sign(delta_);
+        delta_ -= sign(delta_);
         cyclesSinceLastStep_ = 0;
     } else if (isMoving()) {
         ++cyclesSinceLastStep_;

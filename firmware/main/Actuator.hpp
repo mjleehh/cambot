@@ -164,6 +164,7 @@ private:
     int delta_;
     uint cyclesPerStep_;
     uint cyclesSinceLastStep_;
+    bool idle_;
     const SemaphoreHandle_t dataLock_;
 };
 
