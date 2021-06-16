@@ -11,7 +11,19 @@ struct Kinematics {
     Kinematics(stepper::Actuator &yaw, stepper::Actuator &lowerVert, stepper::Actuator &upperVert,
                stepper::Actuator &roll, stepper::Actuator &pitch);
 
-    void moveTo(const vecs::int3& position, float speed);
+    /**
+     * move to a specific location
+     *
+     * @param newPosition   new position in mm
+     * @param speed      speed in millimeters per second
+     */
+    void moveTo(const vecs::int3& newPosition, float speed);
+
+    /**
+     * return the current tool position
+     *
+     * @return tool position in millimeters
+     */
     vecs::int3 position() const;
 
 
@@ -37,6 +49,7 @@ private:
     int b_;
     int a0_;
     int a1_;
+    int a2_;
 
     stepper::Actuator& yaw_;
     stepper::Actuator& lowerVert_;

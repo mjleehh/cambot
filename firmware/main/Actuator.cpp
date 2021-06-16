@@ -31,7 +31,7 @@ constexpr uint abs(int value) {
 
 Actuator::Actuator(uint numSteps, std::vector<StepperTd6560>&& steppers, SemaphoreHandle_t dataLock)
         : numSteps_(numSteps), steppers_(std::move(steppers)),
-          stepPos_(0), isHomed_(false), delta_(0), cyclesPerStep_(0), cyclesSinceLastStep_(0), idle_(true), dataLock_(dataLock)
+          stepPos_(0), isHomed_(false), delta_(0), deltaSign_(0), cyclesPerStep_(0), cyclesSinceLastStep_(0), dataLock_(dataLock)
 {
     uint64_t mask = 0;
     for (auto& stepper : steppers_) {
@@ -59,6 +59,7 @@ void Actuator::moveToStep(int step, uint speed) {
     auto numSteps = static_cast<int>(numSteps_);
     int delta = (step - stepPos_) % numSteps;
     auto direction = delta >= 0 ? Direction::ccw : Direction::cw;
+    speed = (speed < 1) + speed; // ensure speed to be at least 1
     ESP_LOGI(tag, "move to %d, %d, %d, %d", step, speed, stepPos_, delta);
     rotateSteps(direction, abs(delta), speed);
 }
@@ -165,7 +166,7 @@ float Actuator::positionRad() const {
 // ---------------------------------------------------------------------------------------------------------------------
 
 bool Actuator::isMoving() const {
-    return !idle_;
+    return deltaSign_ != 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -196,7 +197,7 @@ float Actuator::radToSteps(float rad) const {
 
 void Actuator::clockUp() {
     // only clock up can start and end moving
-    idle_ = delta_ == 0;
+    deltaSign_ = sign(delta_);
     if (needToStep()) {
         for (auto& stepper : steppers_) {
             gpio_set_level(stepper.clockPin, 1);
@@ -211,8 +212,8 @@ void Actuator::clockDown() {
         for (auto& stepper : steppers_) {
             gpio_set_level(stepper.clockPin, 0);
         }
-        stepPos_ += sign(delta_);
-        delta_ -= sign(delta_);
+        stepPos_ += deltaSign_;
+        delta_ -= deltaSign_;
         cyclesSinceLastStep_ = 0;
     } else if (isMoving()) {
         ++cyclesSinceLastStep_;

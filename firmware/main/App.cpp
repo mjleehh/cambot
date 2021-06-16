@@ -194,20 +194,9 @@ void App::initializeCalibrationPhase() {
         actuators_->pitch.rotateSteps(stepper::Actuator::Direction::ccw, steps, speed);
     };
 
-    auto setHome = [this](mfl::httpd::Context<void, void>& c) {
-        ESP_LOGI(tag, "set home");
-        if (state_ == State::setHome) {
-            steppers_.setHome();
-            setStatusMessage("ready");
-            state_ = State::ready;
-            setReady();
-            return;
-        } else if (state_ == State::ready) {
-            steppers_.setHome();
-        } else {
-            ESP_LOGE(tag, "trying to set home non calibrate or ready state %d", static_cast<int>(state_));
-        }
-    };
+    router_.post("/move/stop", [this](mfl::httpd::Context<void, void>& c) {
+        steppers_.stop();
+    });
 
     router_.post("/calibrate/yaw/left/:steps/:speed", stepYawLeft);
     router_.post("/calibrate/yaw/right/:steps/:speed", stepYawRight);
@@ -224,7 +213,20 @@ void App::initializeCalibrationPhase() {
     router_.post("/calibrate/pitch/up/:steps/:speed", stepPitchUp);
     router_.post("/calibrate/pitch/down/:steps/:speed", stepPitchDown);
 
-    router_.post("/calibrate/set-home", setHome);
+    router_.post("/calibrate/set-home", [this](mfl::httpd::Context<void, void>& c) {
+        ESP_LOGI(tag, "set home");
+        if (state_ == State::setHome) {
+            steppers_.setHome();
+            setStatusMessage("ready");
+            state_ = State::ready;
+            setReady();
+            return;
+        } else if (state_ == State::ready) {
+            steppers_.setHome();
+        } else {
+            ESP_LOGE(tag, "trying to set home non calibrate or ready state %d", static_cast<int>(state_));
+        }
+    });
 
     router_.post("/home", [this](mfl::httpd::Context<void, void>& c) {
         actuators_->yaw.moveToStep(0, 100);
@@ -308,14 +310,42 @@ void App::setReady() {
         ESP_LOGI(tag, "move to... %d, %d, %d", position.x, position.y, position.z);
         kinematics_->moveTo(position, c.params.get<float>("speed"));
     });
-//
-//    router_.post("/move/lv/:steps/:speed", stepLowerVertUp);
-//
-//    router_.post("/move/uv/:steps/:speed", stepUpperVertUp);
-//
-//    router_.post("/move/roll/:steps/:speed", stepRollCcw);
-//
-//    router_.post("/move/pitch/:steps/:speed", stepPitchUp);
+
+    router_.post("/move/forward/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
+        auto position = kinematics_->position();
+        position.x += c.params.get<int>("dist");
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
+
+    router_.post("/move/backward/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
+        auto position = kinematics_->position();
+        position.x -= c.params.get<int>("dist");
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
+
+    router_.post("/move/left/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
+        auto position = kinematics_->position();
+        position.y += c.params.get<int>("dist");
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
+
+    router_.post("/move/right/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
+        auto position = kinematics_->position();
+        position.y -= c.params.get<int>("dist");
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
+
+    router_.post("/move/up/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
+        auto position = kinematics_->position();
+        position.z += c.params.get<int>("dist");
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
+
+    router_.post("/move/down/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
+        auto position = kinematics_->position();
+        position.z -= c.params.get<int>("dist");
+        kinematics_->moveTo(position, c.params.get<float>("speed"));
+    });
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

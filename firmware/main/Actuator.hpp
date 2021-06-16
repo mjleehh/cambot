@@ -95,6 +95,9 @@ struct Actuator {
      */
     void rotateRad(float rad, float radSpeed);
 
+    /**
+     * stop the stepper after completing current cycle
+     */
     void stop();
 
     /**
@@ -107,6 +110,9 @@ struct Actuator {
      */
     bool isHomed() const;
 
+    /**
+     * number of steps in one complete actuator rotation
+     */
     uint numSteps() const;
 
     int positionSteps() const;
@@ -162,9 +168,9 @@ private:
     bool isHomed_;
 
     int delta_;
+    int deltaSign_;
     uint cyclesPerStep_;
     uint cyclesSinceLastStep_;
-    bool idle_;
     const SemaphoreHandle_t dataLock_;
 };
 

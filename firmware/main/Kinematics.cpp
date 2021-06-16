@@ -35,21 +35,34 @@ float stableAcos(float nom, float denom) {
     return acosf(frac * (frac < 1) + (frac > 1));
 }
 
+float abs(float v) {
+    return v * ((v >= 0) - (v < 0));;
+}
+
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 Kinematics::Kinematics(stepper::Actuator &yaw, stepper::Actuator &lowerVert, stepper::Actuator &upperVert,
                        stepper::Actuator &roll, stepper::Actuator &pitch)
-        : b_(CONFIG_CAMBOT_LENGTH_BASE_TO_LOWER_VERT), a0_(CONFIG_CAMBOT_LENGTH_LOWER_VERT_TO_UPPER_VERT), a1_(CONFIG_CAMBOT_LENGTH_UPPER_VERT_TO_PITCH),
+        : b_(CONFIG_CAMBOT_LENGTH_BASE_TO_LOWER_VERT), a0_(CONFIG_CAMBOT_LENGTH_LOWER_VERT_TO_UPPER_VERT), a1_(CONFIG_CAMBOT_LENGTH_UPPER_VERT_TO_PITCH), a2_(CONFIG_CAMBOT_LENGTH_PITCH_TO_TOOL),
             yaw_(yaw), lowerVert_(lowerVert), upperVert_(upperVert), roll_(roll), pitch_(pitch) {}
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void Kinematics::moveTo(const vecs::int3& position, float speed) {
-    yaw_.moveToRad(yawForPosition(position), speed);
-    lowerVert_.moveToRad(lowerVertForPosition(position), speed);
-    upperVert_.moveToRad(upperVertForPosition(position), speed);
+void Kinematics::moveTo(const vecs::int3& newPosition, float speed) {
+    auto duration = linalg::distance(position(), newPosition) / speed;
+
+    auto newYaw = yawForPosition(newPosition);
+    auto yawSpeed = abs((newYaw - yaw_.positionRad()) / duration);
+    auto newLowerVert = lowerVertForPosition(newPosition);
+    auto lowerVertSpeed = abs((newLowerVert - lowerVert_.positionRad()) / duration);
+    auto newUpperVert = upperVertForPosition(newPosition);
+    auto upperVertSpeed = abs((newUpperVert - upperVert_.positionRad()) / duration);
+
+    yaw_.moveToRad(newYaw, yawSpeed);
+    lowerVert_.moveToRad(newLowerVert, lowerVertSpeed);
+    upperVert_.moveToRad(newUpperVert, upperVertSpeed);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -78,8 +91,6 @@ float Kinematics::lowerVertForPosition(const vecs::int3& position) const {
     float nom = a0_ * a0_ - a1_ * a1_ + d * d;
     float denom = 2 * a0_ * d;
     float gamma = atan2f(vec_d.x, vec_d.y);
-    ESP_LOGI(tag, "lv %d, %d, %d, %f", a0_, a1_, d, gamma);
-    ESP_LOGI(tag, "%f, %f, %f", nom, denom, stableAcos(nom, denom));
     return stableAcos(nom, denom) - gamma;
 }
 
@@ -89,8 +100,6 @@ float Kinematics::upperVertForPosition(const vecs::int3& position) const {
     auto d = length(calculateProjected_d(position));
     float nom = a0_ * a0_ + a1_ * a1_ - d * d;
     float denom = 2 * a0_ * a1_;
-    ESP_LOGI(tag, "uv %d, %d, %d", a0_, a1_, d);
-    ESP_LOGI(tag, "%f, %f, %f", nom, denom, stableAcos(nom, denom));
     return stableAcos(nom, denom) - M_PI;
 }
 

@@ -1,4 +1,4 @@
-menu "cam bot"
+menu "cambot general"
 
 # general options
 
@@ -42,7 +42,9 @@ menu "cam bot"
         help
             This value determines the length of one stepper control cycle.
 
-# stepper controller pins
+endmenu
+
+menu "cambot pins"
 
     config CAMBOT_YAW_DIRECTION_PIN
         int "yaw direction pin"
@@ -116,7 +118,9 @@ menu "cam bot"
         help
             clock pin of tb6560 controlling the motor of the pitch joint
 
-# actuator calibration
+endmenu
+
+menu "cambot dimensions"
 
     config CAMBOT_YAW_NUM_STEPS
         int "num yaw steps"
@@ -158,11 +162,17 @@ menu "cam bot"
         int "length lower vert to upper vert (mm)"
         default 222
         help
-            the distance of the base plate to the axis of the lower vert joint in millimeters
+            the distance of the axis of the lower vert joint to the axis of the upper vert joint in millimeters
 
     config CAMBOT_LENGTH_UPPER_VERT_TO_PITCH
         int "length lower vert to upper vert (mm)"
         default 222
         help
-            the distance of the base plate to the axis of the lower vert joint in millimeters
+            the distance of the axis of the upper vert joint to the axis of the pitch joint in millimeters
+
+    config CAMBOT_LENGTH_PITCH_TO_TOOL
+        int "length pitch to tool (mm)"
+        default 185
+        help
+            the distance of the axis of the pitch joint to the center of the tool
 endmenu
