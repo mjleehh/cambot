@@ -24,6 +24,27 @@ export type Position = {
     z: number
 }
 
+export type Move = {
+    forward: number
+    horizontal: number
+    vertical: number
+}
+
+export enum DirectionForward {
+    forward,
+    backward,
+}
+
+export enum DirectionHorizontal {
+    left,
+    right,
+}
+
+export enum DirectionVertical {
+    up,
+    down,
+}
+
 export type Rotations = {
     yaw: Rotation,
     lowerVert: Rotation,

@@ -1,4 +1,12 @@
-import {PitchDirection, RollDirection, YawDirection, ArmState} from './types'
+import {
+    PitchDirection,
+    RollDirection,
+    YawDirection,
+    ArmState,
+    Move,
+    DirectionForward,
+    DirectionHorizontal, DirectionVertical
+} from './types'
 
 export type Action =
     | RequestYawAction
@@ -7,13 +15,23 @@ export type Action =
     | RequestRollAction
     | RequestPitchAction
     | SetNumStepsAction
-    | SetSpeedAction
+    | SetRotationSpeedAction
     | SetHomeAction
     | GotArmState
-    | IncreaseSpeedAction
-    | DecreaseSpeedAction
+    | IncreaseRotationSpeedAction
+    | DecreaseRotationSpeedAction
     | GoHomeAction
     | MoveToAction
+    | RequestMoveAction
+    | RequestStopAction
+    | SetDistanceAction
+    | SetSpeedAction
+    | RequestMoveForwardAction
+    | RequestMoveHorizontalAction
+    | RequestMoveVerticalAction
+    | IncreaseSpeedAction
+    | DecreaseSpeedAction
+
 
 export const REQUEST_YAW = 'REQUEST_YAW'
 export type RequestYawAction = {
@@ -75,13 +93,13 @@ export const setNumSteps = (numSteps: number): SetNumStepsAction => ({
     payload: numSteps
 })
 
-export const SET_SPEED = 'SET_SPEED'
-export type SetSpeedAction = {
-    type: typeof SET_SPEED
+export const SET_ROTATION_SPEED = 'SET_ROTATION_SPEED'
+export type SetRotationSpeedAction = {
+    type: typeof SET_ROTATION_SPEED
     payload: number
 }
-export const setSpeed = (speed: number): SetSpeedAction => ({
-    type: SET_SPEED,
+export const setRotationSpeed = (speed: number): SetRotationSpeedAction => ({
+    type: SET_ROTATION_SPEED,
     payload: speed
 })
 
@@ -111,20 +129,20 @@ export const gotArmState = (armState: ArmState): GotArmState => ({
     payload: armState,
 })
 
-export const INCREASE_SPEED = 'INCREASE_SPEED'
-export type IncreaseSpeedAction = {
-    type: typeof INCREASE_SPEED
+export const INCREASE_ROTATION_SPEED = 'DECREASE_ROTATION_SPEED'
+export type IncreaseRotationSpeedAction = {
+    type: typeof INCREASE_ROTATION_SPEED
 }
-export const increaseSpeed = (): IncreaseSpeedAction => ({
-    type: INCREASE_SPEED,
+export const increaseRotationSpeed = (): IncreaseRotationSpeedAction => ({
+    type: INCREASE_ROTATION_SPEED,
 })
 
-export const DECREASE_SPEED = 'DECREASE_SPEED'
-export type DecreaseSpeedAction = {
-    type: typeof DECREASE_SPEED
+export const DECREASE_ROTATION_SPEED = 'INCREASE_ROTATION_SPEED'
+export type DecreaseRotationSpeedAction = {
+    type: typeof DECREASE_ROTATION_SPEED
 }
-export const decreaseSpeed = (): DecreaseSpeedAction => ({
-    type: DECREASE_SPEED,
+export const decreaseRotationSpeed = (): DecreaseRotationSpeedAction => ({
+    type: DECREASE_ROTATION_SPEED,
 })
 
 export const MOVE_YAW = 'MOVE_YAW'
@@ -150,4 +168,88 @@ export type MoveToAction = {
 export const moveTo = (x: number, y: number, z: number, speed: number): MoveToAction => ({
     type: MOVE_TO,
     payload: {x, y, z, speed}
+})
+
+export const REQUEST_MOVE = 'REQUEST_MOVE'
+export type RequestMoveAction = {
+    type: typeof REQUEST_MOVE
+    payload: Move
+}
+export const requestMove = (forward: number, horizontal: number, vertical: number): RequestMoveAction => ({
+    type: REQUEST_MOVE,
+    payload: {forward, horizontal, vertical},
+})
+
+export const REQUEST_STOP = 'REQUEST_STOP'
+export type RequestStopAction = {
+    type: typeof REQUEST_STOP
+}
+export const requestStop = (): RequestStopAction => ({
+    type: REQUEST_STOP
+})
+
+export const REQUEST_MOVE_FORWARD = 'REQUEST_MOVE_FORWARD'
+export type RequestMoveForwardAction = {
+    type: typeof REQUEST_MOVE_FORWARD
+    payload: DirectionForward
+}
+export const requestMoveForward = (direction: DirectionForward): RequestMoveForwardAction => ({
+    type: REQUEST_MOVE_FORWARD,
+    payload: direction,
+})
+
+export const REQUEST_MOVE_HORIZONTAL = 'REQUEST_MOVE_HORIZONTAL'
+export type RequestMoveHorizontalAction = {
+    type: typeof REQUEST_MOVE_HORIZONTAL
+    payload: DirectionHorizontal
+}
+export const requestMoveHorizontal = (direction: DirectionHorizontal): RequestMoveHorizontalAction => ({
+    type: REQUEST_MOVE_HORIZONTAL,
+    payload: direction,
+})
+
+export const REQUEST_MOVE_VERTICAL = 'REQUEST_MOVE_VERTICAL'
+export type RequestMoveVerticalAction = {
+    type: typeof REQUEST_MOVE_VERTICAL
+    payload: DirectionVertical
+}
+export const requestMoveVertical = (direction: DirectionVertical): RequestMoveVerticalAction => ({
+    type: REQUEST_MOVE_VERTICAL,
+    payload: direction,
+})
+
+export const SET_DISTANCE = 'SET_DISTANCE'
+export type SetDistanceAction = {
+    type: typeof SET_DISTANCE
+    payload: number
+}
+export const setDistance = (distance: number): SetDistanceAction => ({
+    type: SET_DISTANCE,
+    payload: distance,
+})
+
+export const SET_SPEED = 'SET_SPEED'
+export type SetSpeedAction = {
+    type: typeof SET_SPEED
+    payload: number
+}
+export const setSpeed = (speed: number): SetSpeedAction => ({
+    type: SET_SPEED,
+    payload: speed,
+})
+
+export const INCREASE_SPEED = 'INCREASE_SPEED'
+export type IncreaseSpeedAction = {
+    type: typeof INCREASE_SPEED
+}
+export const increaseSpeed = (): IncreaseSpeedAction => ({
+    type: INCREASE_SPEED
+})
+
+export const DECREASE_SPEED = 'DECREASE_SPEED'
+export type DecreaseSpeedAction = {
+    type: typeof DECREASE_SPEED
+}
+export const decreaseSpeed = (): DecreaseSpeedAction => ({
+    type: DECREASE_SPEED
 })

@@ -1,7 +1,49 @@
-import {ArmState, PitchDirection, RollDirection, YawDirection} from './types'
+import {
+    ArmState,
+    DirectionForward,
+    DirectionHorizontal,
+    DirectionVertical,
+    PitchDirection,
+    RollDirection,
+    YawDirection
+} from './types'
 import axios from 'axios'
 
 class Api {
+    stop(): Promise<void> {
+        return axios.post('/api/move/stop')
+    }
+
+    moveForward(direction: DirectionForward, distance: number, speed: number): Promise<void> {
+        if (direction === DirectionForward.forward) {
+            return axios.post(`/api/move/forward/${distance}/${speed}`)
+        } else if (direction === DirectionForward.backward) {
+            return axios.post(`/api/move/backward/${distance}/${speed}`)
+        } else {
+            throw 'invalid direction'
+        }
+    }
+
+    moveHorizontal(direction: DirectionHorizontal, distance: number, speed: number): Promise<void> {
+        if (direction === DirectionHorizontal.left) {
+            return axios.post(`/api/move/left/${distance}/${speed}`)
+        } else if (direction === DirectionHorizontal.right) {
+            return axios.post(`/api/move/right/${distance}/${speed}`)
+        } else {
+            throw 'invalid direction'
+        }
+    }
+
+    moveVertical(direction: DirectionVertical, distance: number, speed: number): Promise<void> {
+        if (direction === DirectionVertical.up) {
+            return axios.post(`/api/move/up/${distance}/${speed}`)
+        } else if (direction === DirectionVertical.down) {
+            return axios.post(`/api/move/down/${distance}/${speed}`)
+        } else {
+            throw 'invalid direction'
+        }
+    }
+
     yaw(direction: YawDirection, steps: number, speed: number) {
         if (direction === YawDirection.left) {
             return axios.post(`/api/calibrate/yaw/left/${steps}/${speed}`)

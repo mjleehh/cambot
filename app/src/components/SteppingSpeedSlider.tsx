@@ -1,5 +1,5 @@
 import {Button, Slider} from 'antd'
-import {decreaseSpeed, increaseSpeed, setSpeed} from '../actions'
+import {decreaseRotationSpeed, increaseRotationSpeed, setRotationSpeed} from '../actions'
 import React from 'react'
 import {useDispatch, useSelector} from 'react-redux'
 import {State} from '../reducer'
@@ -19,12 +19,12 @@ const sliderStyle: React.CSSProperties = {
 
 const SteppingSpeedSlider: React.FunctionComponent = () => {
     const dispatch = useDispatch()
-    const speed = useSelector<State, number>(({speed}) => speed)
+    const speed = useSelector<State, number>(({rotationSpeed}) => rotationSpeed)
 
     return <div style={style}>
-        <Button icon={<PlusOutlined />} onClick={() => dispatch(increaseSpeed())} />
-        <Slider style={sliderStyle} vertical min={1} max={1000} value={speed} onChange={(value: number) => dispatch(setSpeed(value))}/>
-        <Button icon={<MinusOutlined />} onClick={() => dispatch(decreaseSpeed())} />
+        <Button icon={<PlusOutlined />} onClick={() => dispatch(increaseRotationSpeed())} />
+        <Slider style={sliderStyle} vertical min={1} max={1000} value={speed} onChange={(value: number) => dispatch(setRotationSpeed(value))}/>
+        <Button icon={<MinusOutlined />} onClick={() => dispatch(decreaseRotationSpeed())} />
     </div>
 }
 SteppingSpeedSlider.displayName = 'SteppingSpeedSlider'
