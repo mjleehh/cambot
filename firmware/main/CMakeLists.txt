@@ -10,6 +10,7 @@ idf_component_register(SRCS
         Kinematics.cpp
         vecs.hpp
         additional_response_types.hpp
+        math_utils.hpp
         INCLUDE_DIRS "")
 
 set(COMPONENT_REQUIRES

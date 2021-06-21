@@ -3,6 +3,7 @@
 #include <cmath>
 #include <mfl/thread/LockGuard.hpp>
 #include "Actuator.hpp"
+#include "math_utils.hpp"
 
 
 using mfl::thread::LockGuard;
@@ -15,17 +16,9 @@ namespace {
 
 const char* tag = "mfl::StepperTd6560";
 
-constexpr int sign(int value) {
-    return (0 < value) - (value < 0);
-}
-
-constexpr uint abs(int value) {
-    return value * (value > 0) - value * (value < 0);
-}
-
 // ---------------------------------------------------------------------------------------------------------------------
 
-} // namespace anonymous
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -61,7 +54,7 @@ void Actuator::moveToStep(int step, uint speed) {
     auto direction = delta >= 0 ? Direction::ccw : Direction::cw;
     speed = (speed < 1) + speed; // ensure speed to be at least 1
     ESP_LOGI(tag, "move to %d, %d, %d, %d", step, speed, stepPos_, delta);
-    rotateSteps(direction, abs(delta), speed);
+    rotateSteps(direction, mutil::absi(delta), speed);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -81,9 +74,10 @@ void Actuator::moveToRad(float rad, float radSpeed) {
 void Actuator::rotateSteps(Actuator::Direction direction, uint steps, uint speed) {
     uint cyclesPerMillisecond = 1000000u / CONFIG_CAMBOT_STEPPER_CYCLE_TIME;
 
-    if (speed > cyclesPerMillisecond) {
-        throw stepper::InvalidSpeed();
-    }
+//    if (speed > cyclesPerMillisecond) {
+//        ESP_LOGE(tag, "speed too high!\nspeed: %d\ncycles per ms: %d", speed, cyclesPerMillisecond);
+//        throw stepper::InvalidSpeed();
+//    }
 
     LockGuard dataLock(dataLock_);
     for (auto& stepper : steppers_) {
@@ -93,6 +87,7 @@ void Actuator::rotateSteps(Actuator::Direction direction, uint steps, uint speed
 
     delta_ = static_cast<int>(direction) * steps;
     cyclesPerStep_ = cyclesPerMillisecond / speed;
+    cyclesPerStep_ = cyclesPerStep_ * (cyclesPerStep_ > 1) + (cyclesPerStep_ <= 1);
     cyclesSinceLastStep_ = cyclesPerStep_;
 
     ESP_LOGI(tag, "rotate steps: \ncycles per ms:  %d\nspeed:          %d\ndelta:          %d\ncycles per step:%d", cyclesPerMillisecond, speed, delta_, cyclesPerStep_);
@@ -178,26 +173,26 @@ float Actuator::stepsToAngle(float steps) const {
 // ---------------------------------------------------------------------------------------------------------------------
 
 float Actuator::angleToSteps(float angle) const {
-    return angle / 360 * numSteps_;
+    return angle / 360.f * numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 float Actuator::stepsToRad(float steps) const {
-    return steps / numSteps_ * 2 * M_PI;
+    return 2.f * M_PI * steps / numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 float Actuator::radToSteps(float rad) const {
-    return rad / (2 * M_PI) * numSteps_;
+    return rad / (2.f * M_PI) * numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
 void Actuator::clockUp() {
     // only clock up can start and end moving
-    deltaSign_ = sign(delta_);
+    deltaSign_ = mutil::signi(delta_);
     if (needToStep()) {
         for (auto& stepper : steppers_) {
             gpio_set_level(stepper.clockPin, 1);

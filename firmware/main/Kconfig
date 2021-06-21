@@ -47,16 +47,16 @@ endmenu
 menu "cambot pins"
 
     config CAMBOT_YAW_DIRECTION_PIN
-        int "yaw direction pin"
+        int "theta direction pin"
         default 21
         help
-            direction pin of tb6560 controlling the yaw rotation at the base of the robot
+            direction pin of tb6560 controlling the theta rotation at the base of the robot
 
     config CAMBOT_YAW_CLOCK_PIN
-        int "yaw clock pin"
+        int "theta clock pin"
         default 22
         help
-            clock pin of tb6560 controlling the yaw rotation at the base of the robot
+            clock pin of tb6560 controlling the theta rotation at the base of the robot
 
     config CAMBOT_LOWER_VERT_1_DIRECTION_PIN
         int "lower vert 1 direction pin"
@@ -123,10 +123,10 @@ endmenu
 menu "cambot dimensions"
 
     config CAMBOT_YAW_NUM_STEPS
-        int "num yaw steps"
+        int "num theta steps"
         default 32276
         help
-            the number of steps it takes for a full rotation of the yaw actuator
+            the number of steps it takes for a full rotation of the theta actuator
 
     config CAMBOT_LOWER_VERT_NUM_STEPS
         int "num lower vert steps"
@@ -160,13 +160,13 @@ menu "cambot dimensions"
 
     config CAMBOT_LENGTH_LOWER_VERT_TO_UPPER_VERT
         int "length lower vert to upper vert (mm)"
-        default 222
+        default 225
         help
             the distance of the axis of the lower vert joint to the axis of the upper vert joint in millimeters
 
     config CAMBOT_LENGTH_UPPER_VERT_TO_PITCH
         int "length lower vert to upper vert (mm)"
-        default 222
+        default 225
         help
             the distance of the axis of the upper vert joint to the axis of the pitch joint in millimeters
 

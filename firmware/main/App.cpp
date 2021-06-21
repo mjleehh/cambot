@@ -198,22 +198,57 @@ void App::initializeCalibrationPhase() {
         steppers_.stop();
     });
 
-    router_.post("/calibrate/yaw/left/:steps/:speed", stepYawLeft);
-    router_.post("/calibrate/yaw/right/:steps/:speed", stepYawRight);
+    router_.post("/actuators/step/yaw/left/:steps/:speed", stepYawLeft);
+    router_.post("/actuators/step/yaw/right/:steps/:speed", stepYawRight);
 
-    router_.post("/calibrate/lv/up/:steps/:speed", stepLowerVertUp);
-    router_.post("/calibrate/lv/down/:steps/:speed", stepLowerVertDown);
+    router_.post("/actuators/step/lv/up/:steps/:speed", stepLowerVertUp);
+    router_.post("/actuators/step/lv/down/:steps/:speed", stepLowerVertDown);
 
-    router_.post("/calibrate/uv/up/:steps/:speed", stepUpperVertUp);
-    router_.post("/calibrate/uv/down/:steps/:speed", stepUpperVertDown);
+    router_.post("/actuators/step/uv/up/:steps/:speed", stepUpperVertUp);
+    router_.post("/actuators/step/uv/down/:steps/:speed", stepUpperVertDown);
 
-    router_.post("/calibrate/roll/ccw/:steps/:speed", stepRollCcw);
-    router_.post("/calibrate/roll/cw/:steps/:speed", stepRollCw);
+    router_.post("/actuators/step/roll/ccw/:steps/:speed", stepRollCcw);
+    router_.post("/actuators/step/roll/cw/:steps/:speed", stepRollCw);
 
-    router_.post("/calibrate/pitch/up/:steps/:speed", stepPitchUp);
-    router_.post("/calibrate/pitch/down/:steps/:speed", stepPitchDown);
+    router_.post("/actuators/step/pitch/up/:steps/:speed", stepPitchUp);
+    router_.post("/actuators/step/pitch/down/:steps/:speed", stepPitchDown);
 
-    router_.post("/calibrate/set-home", [this](mfl::httpd::Context<void, void>& c) {
+    router_.post("/actuators/rotate/yaw/:deg/:speed", [this](mfl::httpd::Context<void, std::string>& c) {
+        ESP_LOGI(tag, "rotate yaw");
+        auto deg = c.params.get<int>("deg");
+        auto speed = c.params.get<uint>("speed");
+        actuators_->yaw.rotateAngle(deg, speed);
+    });
+
+    router_.post("/actuators/rotate/lv/:deg/:speed", [this](mfl::httpd::Context<void, std::string>& c) {
+        ESP_LOGI(tag, "rotate lower vert");
+        auto deg = c.params.get<int>("deg");
+        auto speed = c.params.get<uint>("speed");
+        actuators_->lowerVert.rotateAngle(deg, speed);
+    });
+
+    router_.post("/actuators/rotate/uv/:deg/:speed", [this](mfl::httpd::Context<void, std::string>& c) {
+        ESP_LOGI(tag, "rotate upper vert");
+        auto deg = c.params.get<int>("deg");
+        auto speed = c.params.get<uint>("speed");
+        actuators_->upperVert.rotateAngle(deg, speed);
+    });
+
+    router_.post("/actuators/rotate/roll/:deg/:speed", [this](mfl::httpd::Context<void, std::string>& c) {
+        ESP_LOGI(tag, "rotate roll");
+        auto deg = c.params.get<int>("deg");
+        auto speed = c.params.get<uint>("speed");
+        actuators_->roll.rotateAngle(deg, speed);
+    });
+
+    router_.post("/actuators/rotate/pitch/:deg/:speed", [this](mfl::httpd::Context<void, std::string>& c) {
+        ESP_LOGI(tag, "rotate pitch");
+        auto deg = c.params.get<int>("deg");
+        auto speed = c.params.get<uint>("speed");
+        actuators_->pitch.rotateAngle(deg, speed);
+    });
+
+    router_.post("/actuators/set-home", [this](mfl::httpd::Context<void, void>& c) {
         ESP_LOGI(tag, "set home");
         if (state_ == State::setHome) {
             steppers_.setHome();
@@ -228,56 +263,60 @@ void App::initializeCalibrationPhase() {
         }
     });
 
-    router_.post("/home", [this](mfl::httpd::Context<void, void>& c) {
-        actuators_->yaw.moveToStep(0, 100);
-        actuators_->lowerVert.moveToStep(0, 100);
-        actuators_->upperVert.moveToStep(0, 100);
+    router_.post("/home/:speed", [this](mfl::httpd::Context<void, void>& c) {
+        auto speed = c.params.get<int>("speed");
+        actuators_->yaw.moveToStep(0, speed);
+        actuators_->lowerVert.moveToStep(0, speed);
+        actuators_->upperVert.moveToStep(0, speed);
+        actuators_->roll.moveToStep(0, speed);
+        actuators_->pitch.moveToStep(0, speed);
     });
 
     kinematics_ = std::make_unique<Kinematics>(actuators_->yaw, actuators_->lowerVert, actuators_->upperVert, actuators_->roll, actuators_->pitch);
     router_.get("/state", [this](mfl::httpd::Context<void, nlohmann::json>& c) {
-        auto position = kinematics_->position();
+        auto toolPosition = kinematics_->toolPosition();
+        auto wristPosition = kinematics_->wristPosition();
+        auto inverseAngles = kinematics_->anglesForPosition(wristPosition, {});
         c.res.body = {
             {"rotations", {
                 {"yaw", {
-                  {"deg", actuators_->yaw.positionAngle()},
-                  {"steps", actuators_->yaw.positionSteps()}
-                }},
-                {"lowerVert", {
-                        {"deg", actuators_->lowerVert.positionAngle()},
-                        {"steps", actuators_->lowerVert.positionSteps()}
-                }},
-                {"upperVert", {
-                        {"deg", actuators_->upperVert.positionAngle()},
-                        {"steps", actuators_->upperVert.positionSteps()}
-                }},
-                {"roll", {
-                   {"deg", actuators_->roll.positionAngle()},
-                   {"steps", actuators_->roll.positionSteps()}
-                }},
-                {"pitch", {
-                    {"deg", actuators_->pitch.positionAngle()},
-                    {"steps", actuators_->pitch.positionSteps()}
-                }},
-
+                {"deg", actuators_->yaw.positionAngle()},
+                {"steps", actuators_->yaw.positionSteps()}
             }},
-            {"position", {
-                {"x", position.x},
-                {"y", position.y},
-                {"z", position.z}
+            {"lowerVert", {
+                {"deg", actuators_->lowerVert.positionAngle()},
+                {"steps", actuators_->lowerVert.positionSteps()}
+            }},
+            {"upperVert", {
+                {"deg", actuators_->upperVert.positionAngle()},
+                {"steps", actuators_->upperVert.positionSteps()}
+            }},
+            {"roll", {
+                {"deg", actuators_->roll.positionAngle()},
+                {"steps", actuators_->roll.positionSteps()}
+            }},
+            {"pitch", {
+                {"deg", actuators_->pitch.positionAngle()},
+                {"steps", actuators_->pitch.positionSteps()}
+            }},
+            }},
+            {"toolPosition",  {
+                {"x", toolPosition.x},
+                {"y", toolPosition.y},
+                {"z", toolPosition.z}
+            }},
+            {"wristPosition", {
+                {"x", wristPosition.x},
+                {"y", wristPosition.y},
+                {"z", wristPosition.z}
+            }},
+            {"inverse", {
+                {"theta", inverseAngles.base.theta},
+                {"phi0", inverseAngles.base.phi0},
+                {"phi1", inverseAngles.base.phi1},
+                {"rho", inverseAngles.wrist.rho},
+                {"phi2", inverseAngles.wrist.phi2},
             }}
-        };
-    });
-
-    router_.get("/invk", [this](mfl::httpd::Context<void, nlohmann::json>& c) {
-        auto position = kinematics_->position();
-        auto yaw = kinematics_->yawForPosition(position) * 180 / M_PI;
-        auto lowerVert = kinematics_->lowerVertForPosition(position) * 180 / M_PI;
-        auto upperVert = kinematics_->upperVertForPosition(position) * 180 / M_PI;
-        c.res.body = {
-                {"yaw", yaw},
-                {"lowerVert", lowerVert},
-                {"upperVert", upperVert}
         };
     });
 
@@ -289,62 +328,62 @@ void App::initializeCalibrationPhase() {
 }
 
 void App::setReady() {
-    auto moveYaw = [this](mfl::httpd::Context<void, std::string>& c) {
-        ESP_LOGI(tag, "move yaw");
-        auto angle = c.params.get<int>("angle");
-        auto speed = c.params.get<uint>("speed");
-        actuators_->yaw.moveToAngle(angle, speed);
-    };
-    router_.post("/move/yaw/:angle/:speed", moveYaw);
-
     router_.post("/move/position/:x/:y/:z/:speed", [this](mfl::httpd::Context<void, void>& c){
-        vecs::int3 position = {
+        vecs::float3 position = {
             c.params.get<int>("x"),
             c.params.get<int>("y"),
             c.params.get<int>("z")
         };
-        auto yaw = kinematics_->yawForPosition(position) * 180 / M_PI;
-        auto lowerVert = kinematics_->lowerVertForPosition(position) * 180 / M_PI;
-        auto upperVert = kinematics_->upperVertForPosition(position) * 180 / M_PI;
-        ESP_LOGI(tag, "move to... %f, %f, %f", yaw, lowerVert, upperVert);
-        ESP_LOGI(tag, "move to... %d, %d, %d", position.x, position.y, position.z);
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        Kinematics::Orientation orientation{};
+        kinematics_->moveTo(position, orientation, c.params.get<float>("speed"));
     });
 
     router_.post("/move/forward/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
-        auto position = kinematics_->position();
+        auto position = kinematics_->wristPosition();
+        ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.x += c.params.get<int>("dist");
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
+        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
     });
 
     router_.post("/move/backward/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
-        auto position = kinematics_->position();
+        auto position = kinematics_->wristPosition();
+        ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.x -= c.params.get<int>("dist");
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
+        kinematics_->moveTo(position, {},  c.params.get<float>("speed"));
     });
 
     router_.post("/move/left/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
-        auto position = kinematics_->position();
+        auto position = kinematics_->wristPosition();
+        ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.y += c.params.get<int>("dist");
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
+        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
     });
 
     router_.post("/move/right/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
-        auto position = kinematics_->position();
+        auto position = kinematics_->wristPosition();
+        ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.y -= c.params.get<int>("dist");
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
+        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
     });
 
     router_.post("/move/up/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
-        auto position = kinematics_->position();
+        auto position = kinematics_->wristPosition();
+        ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.z += c.params.get<int>("dist");
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
+        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
     });
 
     router_.post("/move/down/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
-        auto position = kinematics_->position();
+        auto position = kinematics_->wristPosition();
+        ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.z -= c.params.get<int>("dist");
-        kinematics_->moveTo(position, c.params.get<float>("speed"));
+        ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
+        kinematics_->moveTo(position, {},  c.params.get<float>("speed"));
     });
 }
 
