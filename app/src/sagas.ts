@@ -80,14 +80,13 @@ function* setHomeSaga() {
 }
 
 function* goHomeSaga() {
-    yield call([api, api.goHome])
+    yield call([api, api.goHome], 500)
 }
 
 function* pollArmStateSaga(): any{
     while (true) {
         try {
             const armState = yield call([api, api.armState])
-            console.log(armState)
             yield put(gotArmState(armState))
         } catch (e) {
             console.log('polling positions failed')
@@ -121,10 +120,10 @@ export default function* rootSaga() {
     yield takeEvery(REQUEST_PITCH, pitchSaga)
     yield takeEvery(SET_HOME, setHomeSaga)
     yield takeEvery(GO_HOME, goHomeSaga)
-    //yield fork(pollArmStateSaga)
     yield takeEvery(MOVE_YAW, moveYawSaga)
     yield takeEvery(MOVE_TO, moveToSaga)
     yield takeEvery(REQUEST_MOVE_FORWARD, moveFowardSaga)
     yield takeEvery(REQUEST_MOVE_HORIZONTAL, moveHorizontalSaga)
     yield takeEvery(REQUEST_MOVE_VERTICAL, moveVerticalSaga)
+    yield fork(pollArmStateSaga)
 }

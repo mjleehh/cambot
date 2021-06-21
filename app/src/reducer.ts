@@ -31,11 +31,23 @@ function initialState(): State {
                 roll: {deg: NaN, steps: NaN},
                 pitch: {deg: NaN, steps: NaN},
             },
-            position: {
+            toolPosition: {
                 x: NaN,
                 y: NaN,
                 z: NaN,
             },
+            wristPosition: {
+                x: NaN,
+                y: NaN,
+                z: NaN,
+            },
+            inverse: {
+                theta: NaN,
+                phi0: NaN,
+                phi1: NaN,
+                rho: NaN,
+                phi2: NaN,
+            }
         }
     }
 }

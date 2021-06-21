@@ -46,9 +46,9 @@ class Api {
 
     yaw(direction: YawDirection, steps: number, speed: number) {
         if (direction === YawDirection.left) {
-            return axios.post(`/api/calibrate/yaw/left/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/yaw/left/${steps}/${speed}`)
         } else if (direction === YawDirection.right) {
-            return axios.post(`/api/calibrate/yaw/right/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/yaw/right/${steps}/${speed}`)
         } else {
             throw 'invalid direction'
         }
@@ -56,9 +56,9 @@ class Api {
 
     lowerVert(direction: PitchDirection, steps: number, speed: number) {
         if (direction === PitchDirection.up) {
-            return axios.post(`/api/calibrate/lv/up/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/lv/up/${steps}/${speed}`)
         } else if (direction === PitchDirection.down) {
-            return axios.post(`/api/calibrate/lv/down/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/lv/down/${steps}/${speed}`)
         } else {
             throw 'invalid direction'
         }
@@ -66,9 +66,9 @@ class Api {
 
     upperVert(direction: PitchDirection, steps: number, speed: number) {
         if (direction === PitchDirection.up) {
-            return axios.post(`/api/calibrate/uv/up/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/uv/up/${steps}/${speed}`)
         } else if (direction === PitchDirection.down) {
-            return axios.post(`/api/calibrate/uv/down/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/uv/down/${steps}/${speed}`)
         } else {
             throw 'invalid direction'
         }
@@ -76,9 +76,9 @@ class Api {
 
     roll(direction: RollDirection, steps: number, speed: number) {
         if (direction === RollDirection.ccw) {
-            return axios.post(`/api/calibrate/roll/ccw/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/roll/ccw/${steps}/${speed}`)
         } else if (direction === RollDirection.cw) {
-            return axios.post(`/api/calibrate/roll/cw/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/roll/cw/${steps}/${speed}`)
         } else {
             throw 'invalid direction'
         }
@@ -86,20 +86,20 @@ class Api {
 
     pitch(direction: PitchDirection, steps: number, speed: number) {
         if (direction === PitchDirection.up) {
-            return axios.post(`/api/calibrate/pitch/up/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/pitch/up/${steps}/${speed}`)
         } else if (direction === PitchDirection.down) {
-            return axios.post(`/api/calibrate/pitch/down/${steps}/${speed}`)
+            return axios.post(`/api/actuators/step/pitch/down/${steps}/${speed}`)
         } else {
             throw 'invalid direction'
         }
     }
 
-    goHome(): Promise<void> {
-        return axios.post('/api/home')
+    goHome(speed: number): Promise<void> {
+        return axios.post(`/api/home/${speed}`)
     }
 
     setHome(): Promise<void> {
-        return axios.post('/api/calibrate/set-home')
+        return axios.post('/api/actuators/set-home')
     }
 
     async armState(): Promise<ArmState> {

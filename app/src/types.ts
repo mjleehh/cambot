@@ -53,7 +53,17 @@ export type Rotations = {
     pitch: Rotation,
 }
 
+export type Angles = {
+    theta: number,
+    phi0: number,
+    phi1: number,
+    rho: number,
+    phi2: number,
+}
+
 export type ArmState = {
     rotations: Rotations
-    position: Position
+    toolPosition: Position
+    wristPosition: Position
+    inverse: Angles
 }
