@@ -1,9 +1,9 @@
 import React from 'react'
-import {useSelector} from 'react-redux'
+import {useSelector, useDispatch} from 'react-redux'
 import {State} from '../reducer'
 import {Angles, Position, Rotations} from '../types'
-import _ from 'lodash'
-import {Table} from 'antd'
+import {Button, Table} from 'antd'
+import {requestArmState} from '../actions'
 
 const style: React.CSSProperties = {
     margin: '1em',
@@ -14,6 +14,7 @@ const PositionDisplay: React.FunctionComponent = () => {
     const wrist = useSelector<State, Position>(({armState: {wristPosition}}) => wristPosition)
     const angles = useSelector<State, Angles>(({armState: {inverse}}) => inverse)
     const rotations = useSelector<State, Rotations>(({armState: {rotations}}) => rotations)
+    const dispatch = useDispatch()
     return <div style={style}>
         Tool:
         <div>x: {tool.x}</div>
@@ -27,7 +28,7 @@ const PositionDisplay: React.FunctionComponent = () => {
         <div>theta: {angles.theta / Math.PI * 180} | {rotations.yaw.deg} </div>
         <div>phi0: {angles.phi0 / Math.PI * 180} | {rotations.lowerVert.deg}</div>
         <div>phi1: {angles.phi1 / Math.PI * 180} | {rotations.upperVert.deg}</div>
-
+        <Button onClick={() => dispatch(requestArmState())}>get state!</Button>
     </div>
 }
 PositionDisplay.displayName = 'PositionDisplay'

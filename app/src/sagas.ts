@@ -18,7 +18,7 @@ import {
     REQUEST_STOP,
     RequestMoveForwardAction,
     RequestMoveHorizontalAction,
-    RequestMoveVerticalAction, REQUEST_MOVE_FORWARD, REQUEST_MOVE_HORIZONTAL, REQUEST_MOVE_VERTICAL
+    RequestMoveVerticalAction, REQUEST_MOVE_FORWARD, REQUEST_MOVE_HORIZONTAL, REQUEST_MOVE_VERTICAL, REQUEST_ARM_STATE
 } from './actions'
 import {takeEvery, call, select, fork, delay, put} from 'redux-saga/effects'
 import api from './api'
@@ -95,6 +95,15 @@ function* pollArmStateSaga(): any{
     }
 }
 
+function* requestArmStateSaga(): any {
+    try {
+        const armState = yield call([api, api.armState])
+        yield put(gotArmState(armState))
+    } catch (e) {
+        console.log('failed to fetch arm state')
+    }
+}
+
 function* moveYawSaga({payload: angle}: RequestRollAction) {
     yield call([api, api.moveYaw], angle, 1)
 }
@@ -125,5 +134,6 @@ export default function* rootSaga() {
     yield takeEvery(REQUEST_MOVE_FORWARD, moveFowardSaga)
     yield takeEvery(REQUEST_MOVE_HORIZONTAL, moveHorizontalSaga)
     yield takeEvery(REQUEST_MOVE_VERTICAL, moveVerticalSaga)
-    yield fork(pollArmStateSaga)
+    yield takeEvery(REQUEST_ARM_STATE, requestArmStateSaga)
+    //yield fork(pollArmStateSaga)
 }

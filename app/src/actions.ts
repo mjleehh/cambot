@@ -119,6 +119,14 @@ export const setHome = (): SetHomeAction => ({
     type: SET_HOME
 })
 
+export const REQUEST_ARM_STATE = 'REQUEST_ARM_STATE'
+export type RequestArmStateAction = {
+    type: typeof REQUEST_ARM_STATE
+}
+export const requestArmState = (): RequestArmStateAction => ({
+    type: REQUEST_ARM_STATE,
+})
+
 export const GOT_ARM_STATE = 'GOT_ARM_STATE'
 export type GotArmState = {
     type: typeof GOT_ARM_STATE
