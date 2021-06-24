@@ -56,8 +56,19 @@ struct Kinematics {
      */
     vecs::float3 wristPosition() const;
 
+    /**
+     * return the tool position for a given set of angles
+     *
+     * @return tool position in millimeters
+     */
+    vecs::float3 toolPositionForAngles(const Angles& angles) const;
 
-
+    /**
+     * return the wrist position for a given set of base angles
+     *
+     * @return tool position in millimeters
+     */
+    vecs::float3 wristPositionForAngles(const BaseAngles& angles) const;
 
 private:
     WristAngles wristAnglesForPose(const BaseAngles& baseAngles, const Orientation& orientation) const;

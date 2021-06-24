@@ -74,10 +74,10 @@ void Actuator::moveToRad(float rad, float radSpeed) {
 void Actuator::rotateSteps(Actuator::Direction direction, uint steps, uint speed) {
     uint cyclesPerMillisecond = 1000000u / CONFIG_CAMBOT_STEPPER_CYCLE_TIME;
 
-//    if (speed > cyclesPerMillisecond) {
-//        ESP_LOGE(tag, "speed too high!\nspeed: %d\ncycles per ms: %d", speed, cyclesPerMillisecond);
-//        throw stepper::InvalidSpeed();
-//    }
+    if (speed > cyclesPerMillisecond) {
+        ESP_LOGW(tag, "speed too high!\nspeed: %d\ncycles per ms: %d", speed, cyclesPerMillisecond);
+        //throw stepper::InvalidSpeed();
+    }
 
     LockGuard dataLock(dataLock_);
     for (auto& stepper : steppers_) {
@@ -87,10 +87,9 @@ void Actuator::rotateSteps(Actuator::Direction direction, uint steps, uint speed
 
     delta_ = static_cast<int>(direction) * steps;
     cyclesPerStep_ = cyclesPerMillisecond / speed;
+    // the booleans ensure at least one cycle per step for overspeed
     cyclesPerStep_ = cyclesPerStep_ * (cyclesPerStep_ > 1) + (cyclesPerStep_ <= 1);
     cyclesSinceLastStep_ = cyclesPerStep_;
-
-    ESP_LOGI(tag, "rotate steps: \ncycles per ms:  %d\nspeed:          %d\ndelta:          %d\ncycles per step:%d", cyclesPerMillisecond, speed, delta_, cyclesPerStep_);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -173,7 +172,7 @@ float Actuator::stepsToAngle(float steps) const {
 // ---------------------------------------------------------------------------------------------------------------------
 
 float Actuator::angleToSteps(float angle) const {
-    return angle / 360.f * numSteps_;
+    return angle / 360 * numSteps_;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
