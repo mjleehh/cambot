@@ -70,6 +70,20 @@ struct Kinematics {
      */
     vecs::float3 wristPositionForAngles(const BaseAngles& angles) const;
 
+    /**
+     * return the current tool orientation
+     *
+     * @return the orientation in rads
+     */
+    Orientation orientation() const;
+
+    /**
+     * return the current tool orientation
+     *
+     * @return the orientation in rads
+     */
+    Orientation orientationForAngles(const Angles& angles) const;
+
 private:
     WristAngles wristAnglesForPose(const BaseAngles& baseAngles, const Orientation& orientation) const;
 
@@ -84,7 +98,6 @@ private:
      * since we omit backward bending, the yaw rotation is in the range (-pi, pi)
      */
     float yawForPosition(const vecs::float3& position) const;
-
     float lowerVertForPosition(const vecs::float3& position) const;
     float upperVertForPosition(const vecs::float3& position) const;
 

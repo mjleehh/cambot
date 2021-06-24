@@ -346,7 +346,9 @@ void App::setReady() {
         ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.x += c.params.get<int>("dist");
         ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
-        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
+        auto orientation = kinematics_->orientation();
+        ESP_LOGI(tag, "maintaining orientation: (%f, %f)", orientation.yaw, orientation.pitch);
+        kinematics_->moveTo(position, orientation, c.params.get<float>("speed"));
     });
 
     router_.post("/move/backward/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
@@ -354,7 +356,9 @@ void App::setReady() {
         ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.x -= c.params.get<int>("dist");
         ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
-        kinematics_->moveTo(position, {},  c.params.get<float>("speed"));
+        auto orientation = kinematics_->orientation();
+        ESP_LOGI(tag, "maintaining orientation: (%f, %f)", orientation.yaw, orientation.pitch);
+        kinematics_->moveTo(position, orientation,  c.params.get<float>("speed"));
     });
 
     router_.post("/move/left/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
@@ -362,7 +366,9 @@ void App::setReady() {
         ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.y += c.params.get<int>("dist");
         ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
-        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
+        auto orientation = kinematics_->orientation();
+        ESP_LOGI(tag, "maintaining orientation: (%f, %f)", orientation.yaw, orientation.pitch);
+        kinematics_->moveTo(position, orientation, c.params.get<float>("speed"));
     });
 
     router_.post("/move/right/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
@@ -370,7 +376,9 @@ void App::setReady() {
         ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.y -= c.params.get<int>("dist");
         ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
-        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
+        auto orientation = kinematics_->orientation();
+        ESP_LOGI(tag, "maintaining orientation: (%f, %f)", orientation.yaw, orientation.pitch);
+        kinematics_->moveTo(position, orientation, c.params.get<float>("speed"));
     });
 
     router_.post("/move/up/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
@@ -378,7 +386,9 @@ void App::setReady() {
         ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.z += c.params.get<int>("dist");
         ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
-        kinematics_->moveTo(position, {}, c.params.get<float>("speed"));
+        auto orientation = kinematics_->orientation();
+        ESP_LOGI(tag, "maintaining orientation: (%f, %f)", orientation.yaw, orientation.pitch);
+        kinematics_->moveTo(position, orientation, c.params.get<float>("speed"));
     });
 
     router_.post("/move/down/:dist/:speed", [this](mfl::httpd::Context<void, void>& c){
@@ -386,7 +396,9 @@ void App::setReady() {
         ESP_LOGI(tag, "request move from: (%f, %f, %f)", position.x, position.y, position.z);
         position.z -= c.params.get<int>("dist");
         ESP_LOGI(tag, "to position: (%f, %f, %f)", position.x, position.y, position.z);
-        kinematics_->moveTo(position, {},  c.params.get<float>("speed"));
+        auto orientation = kinematics_->orientation();
+        ESP_LOGI(tag, "maintaining orientation: (%f, %f)", orientation.yaw, orientation.pitch);
+        kinematics_->moveTo(position, orientation,  c.params.get<float>("speed"));
     });
 }
 

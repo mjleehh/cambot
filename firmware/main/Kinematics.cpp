@@ -18,9 +18,9 @@ const char* tag = "cambot::Kinematics";
 
 Kinematics::Kinematics(stepper::Actuator& yaw, stepper::Actuator& lowerVert, stepper::Actuator& upperVert,
                        stepper::Actuator& roll, stepper::Actuator& pitch)
-        : b_(CONFIG_CAMBOT_LENGTH_BASE_TO_LOWER_VERT), a0_(CONFIG_CAMBOT_LENGTH_LOWER_VERT_TO_UPPER_VERT),
-          a1_(CONFIG_CAMBOT_LENGTH_UPPER_VERT_TO_PITCH), a2_(CONFIG_CAMBOT_LENGTH_PITCH_TO_TOOL),
-          theta_(yaw), phi0_(lowerVert), phi1_(upperVert), rho_(roll), phi2_(pitch) {}
+    : b_(CONFIG_CAMBOT_LENGTH_BASE_TO_LOWER_VERT), a0_(CONFIG_CAMBOT_LENGTH_LOWER_VERT_TO_UPPER_VERT),
+      a1_(CONFIG_CAMBOT_LENGTH_UPPER_VERT_TO_PITCH), a2_(CONFIG_CAMBOT_LENGTH_PITCH_TO_TOOL),
+      theta_(yaw), phi0_(lowerVert), phi1_(upperVert), rho_(roll), phi2_(pitch) {}
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -48,9 +48,9 @@ Kinematics::Angles Kinematics::anglesForPosition(const linalg::aliases::float3& 
     auto orientationAdjustedPosition = position - wristPositionOffsetForOrientation(orientation);;
 
     BaseAngles baseAngles{
-            yawForPosition(orientationAdjustedPosition),
-            lowerVertForPosition(orientationAdjustedPosition),
-            upperVertForPosition(orientationAdjustedPosition)
+        yawForPosition(orientationAdjustedPosition),
+        lowerVertForPosition(orientationAdjustedPosition),
+        upperVertForPosition(orientationAdjustedPosition)
     };
     auto wristAngles = wristAnglesForPose(baseAngles, orientation);
     return {
@@ -63,9 +63,9 @@ Kinematics::Angles Kinematics::anglesForPosition(const linalg::aliases::float3& 
 
 vecs::float3 Kinematics::toolPosition() const {
     return toolPositionForAngles({
-        {theta_.positionRad(), phi0_.positionRad(), phi1_.positionRad()},
-        {rho_.positionRad(), phi2_.positionRad()}
-    });
+                                     {theta_.positionRad(), phi0_.positionRad(), phi1_.positionRad()},
+                                     {rho_.positionRad(), phi2_.positionRad()}
+                                 });
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -95,17 +95,17 @@ vecs::float3 Kinematics::toolPositionForAngles(const Angles& angles) const {
     auto mu = -(a0_ * std::sin(phi0) + a1_ * sinEta);
 
     return {
-            a2_ * (
-                    sinPhi2 * (sinRho * sinTheta - cosRho * cosEta * cosTheta)
-                    - cosPhi2 * sinEta * cosTheta)
-            + mu * cosTheta,
-            -a2_ * (
-                    sinPhi2 * (sinRho * cosTheta + cosRho * cosEta * sinTheta)
-                    + cosPhi2 * sinEta * sinTheta)
-            + mu * sinTheta,
-            a0_ * std::cos(phi0) + a1_ * cosEta
-            + a2_ * (cosPhi2 * cosEta - sinPhi2 * cosRho * sinEta)
-            + b_
+        a2_ * (
+            sinPhi2 * (sinRho * sinTheta - cosRho * cosEta * cosTheta)
+            - cosPhi2 * sinEta * cosTheta)
+        + mu * cosTheta,
+        -a2_ * (
+            sinPhi2 * (sinRho * cosTheta + cosRho * cosEta * sinTheta)
+            + cosPhi2 * sinEta * sinTheta)
+        + mu * sinTheta,
+        a0_ * std::cos(phi0) + a1_ * cosEta
+        + a2_ * (cosPhi2 * cosEta - sinPhi2 * cosRho * sinEta)
+        + b_
     };
 
 }
@@ -123,6 +123,47 @@ vecs::float3 Kinematics::wristPositionForAngles(const BaseAngles& angles) const 
         mu * std::sin(theta),
         a0_ * std::cos(phi0) + a1_ * std::cos(phi0 + phi1) + b_
     };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+Kinematics::Orientation Kinematics::orientation() const {
+    return orientationForAngles({
+        {theta_.positionRad(), phi0_.positionRad(), phi1_.positionRad()},
+        {rho_.positionRad(), phi2_.positionRad()}
+    });
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+Kinematics::Orientation Kinematics::orientationForAngles(const Kinematics::Angles& angles) const {
+    auto& theta = angles.base.theta;
+    auto& phi0 = angles.base.phi0;
+    auto& phi1 = angles.base.phi1;
+    auto& rho = angles.wrist.rho;
+    auto& phi2 = angles.wrist.phi2;
+
+    auto sinTheta = std::sin(theta);
+    auto cosTheta = std::cos(theta);
+    auto sinEta = std::sin(phi0 + phi1);
+    auto cosEta = std::cos(phi0 + phi1);
+    auto sinRho = std::sin(rho);
+    auto cosRho = std::cos(rho);
+    auto sinPhi2 = std::sin(phi2);
+    auto cosPhi2 = std::cos(phi2);
+
+    vecs::float3 r = {
+        sinPhi2 * (sinRho * sinTheta - cosRho * cosEta * cosTheta)
+        - cosPhi2 * sinEta * cosTheta,
+        sinPhi2 * (sinRho * cosTheta + cosRho * cosEta * sinTheta)
+        + cosPhi2 * sinEta * sinTheta,
+        cosPhi2 * cosEta - sinPhi2 * cosRho * sinEta
+    };
+
+    float yaw   = std::atan2(r.y, r.x);
+    float pitch = std::asin(r.z);
+
+    return {yaw, pitch};
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -146,28 +187,15 @@ Kinematics::WristAngles Kinematics::wristAnglesForPose(const Kinematics::BaseAng
     };
     auto p_z = linalg::cross(p_0, p_y);
 
-    ESP_LOGI(tag, "phi_0: %f, phi_1: %f", baseAngles.phi0 / M_PI * 180, baseAngles.phi1 / M_PI * 180);
-    ESP_LOGI(tag, "theta: %f, gamma_v: %f", baseAngles.theta / M_PI * 180, gamma_v / M_PI * 180);
-    ESP_LOGI(tag, "P_0 = (%f, %f, %f)", p_0.x, p_0.y, p_0.z);
-    ESP_LOGI(tag, "P_y = (%f, %f, %f)", p_y.x, p_y.y, p_y.z);
-    ESP_LOGI(tag, "P_z = (%f, %f, %f)", p_z.x, p_z.y, p_z.z);
-    ESP_LOGI(tag, "P   = (%f, %f, %f)", p.x, p.y, p.z);
-
     // this is the actual phi_2 joint axis vector in world coords
     auto p_perp = linalg::cross(p, p_0);
-    ESP_LOGI(tag, "P_perp = (%f, %f, %f)", p_perp.x, p_perp.y, p_perp.z);
     // now convert this to the wrist frame
     auto proj_y = linalg::dot(p_perp, p_y);
     auto proj_z = linalg::dot(p_perp, p_z);
 
     // if proj_y < 0 then phi_2 must be negative
     auto phi_2 = linalg::angle(p, p_0) * mutil::signf(proj_y);
-
-    ESP_LOGI(tag, "AXIS Y: %f", proj_y);
-    ESP_LOGI(tag, "AXIS Z: %f", proj_z);
-
     auto rho = std::atan(proj_z / proj_y);
-    ESP_LOGI(tag, "WRIST ROTATION = (rho: %f phi2: %f)", rho / M_PI * 180, phi_2 / M_PI * 180);
     return {rho, phi_2};
 }
 
